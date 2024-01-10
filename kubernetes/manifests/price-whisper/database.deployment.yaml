@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database-deployment
+  namespace: price-whisper
+  annotations:
+    author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      containers:
+        - name: database-container
+          image: rqlite/rqlite:8.15.0
+          ports:
+            - containerPort: 4001
+          command:
+            - "-node-id"
+            - "1"
+            - "-auth"
+            - "/run/secrets/config.json"
+            - "-http-adv-addr"
+            - "database:4001"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /run/secrets
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 4001
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            failureThreshold: 5
+      volumes:
+        - name: config-volume
+          configMap:
+            name: database-config

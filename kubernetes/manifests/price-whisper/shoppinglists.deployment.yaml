@@ -13,6 +13,11 @@ spec:
       labels:
         app: shoppinglists
     spec:
+      initContainers:
+        - name: wait-for-database
+          image: busybox
+          command: [ "/bin/sh", "-c" ]
+          args: [ "until wget --spider -S http://database:4001/readyz 2>&1 | grep 'HTTP/1.1 200 OK'; do echo 'Waiting for RQLite...'; sleep 2; done;" ]
       containers:
         - name: shoppinglists-container
           image: onyxmoon/pw-shoppinglist-service:latest
