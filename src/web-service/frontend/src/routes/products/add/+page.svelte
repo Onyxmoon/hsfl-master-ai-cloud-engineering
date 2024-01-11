@@ -21,8 +21,6 @@
     let formSubmitted: boolean = false;
     let eanSubmitted: boolean = false;
 
-    $: productDescription = productData ? productData.description : '';
-
     function submit(): void {
         if (! productDescription) return;
         productData ? updateProduct() : createProduct();

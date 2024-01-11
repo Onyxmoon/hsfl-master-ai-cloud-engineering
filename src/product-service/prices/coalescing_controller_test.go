@@ -143,7 +143,81 @@ func TestCoalescingController_GetPricesByUser(t *testing.T) {
 
 		for i, price := range response {
 			if price.UserId != 1 {
-				t.Errorf("Expected role of user %d, got %d", 1, response[i].UserId)
+				t.Errorf("Expected id of user %d, got %d", 1, response[i].UserId)
+			}
+		}
+	})
+}
+
+func TestCoalescingController_GetPricesByProduct(t *testing.T) {
+	var mockPriceRepository = prices.NewMockRepository(t)
+	var priceRepository Repository = mockPriceRepository
+
+	priceController := NewCoalescingController(priceRepository)
+
+	t.Run("Bad non-numeric request (expect 400)", func(t *testing.T) {
+		writer := httptest.NewRecorder()
+		request := httptest.NewRequest("GET", "/api/v1/price/product/abc", nil)
+		ctx := context.WithValue(request.Context(), "productId", "abc")
+		request = request.WithContext(ctx)
+
+		priceController.GetPricesByProduct(writer, request)
+
+		assert.Equal(t, http.StatusBadRequest, writer.Code)
+	})
+
+	t.Run("Unknown productId (expect 404)", func(t *testing.T) {
+		writer := httptest.NewRecorder()
+		request := httptest.NewRequest("GET", "/api/v1/price/product/10", nil)
+		ctx := context.WithValue(request.Context(), "productId", "10")
+		request = request.WithContext(ctx)
+
+		mockPriceRepository.EXPECT().FindAllByProduct(uint64(10)).Return(nil, errors.New(ErrorPriceNotFound))
+
+		priceController.GetPricesByProduct(writer, request)
+
+		assert.Equal(t, http.StatusNotFound, writer.Code)
+	})
+
+	t.Run("Successfully get existing prices by product (expect 200 and prices)", func(t *testing.T) {
+		writer := httptest.NewRecorder()
+		request := httptest.NewRequest("GET", "/api/v1/price/product/1", nil)
+		request = request.WithContext(context.WithValue(request.Context(), "productId", "1"))
+
+		mockPriceRepository.EXPECT().FindAllByProduct(uint64(1)).Return([]*model.Price{
+			{
+				UserId:    1,
+				ProductId: 1,
+				Price:     2.99,
+			},
+		}, nil)
+
+		priceController.GetPricesByProduct(writer, request)
+
+		if writer.Code != http.StatusOK {
+			t.Errorf("Expected status code %d, got %d", http.StatusOK, writer.Code)
+		}
+
+		if writer.Header().Get("Content-Type") != "application/json" {
+			t.Errorf("Expected content type %s, got %s",
+				"application/json", writer.Header().Get("Content-Type"))
+		}
+
+		result := writer.Result()
+		var response []model.Price
+		err := json.NewDecoder(result.Body).Decode(&response)
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+
+		if len(response) != 1 {
+			t.Errorf("Expected count of prices is %d, got %d",
+				1, len(response))
+		}
+
+		for i, price := range response {
+			if price.ProductId != 1 {
+				t.Errorf("Expected id of product %d, got %d", 1, response[i].ProductId)
 			}
 		}
 	})

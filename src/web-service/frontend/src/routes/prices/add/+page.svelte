@@ -22,8 +22,6 @@
 
     let formSubmitted: boolean = false;
 
-    $: productPrice = priceData ? priceData.price : null;
-
     function submit(): void {
         if (! productPrice || ! productData) return;
         priceIsAlreadyCreated ? updatePrice() : fetchContent("POST");

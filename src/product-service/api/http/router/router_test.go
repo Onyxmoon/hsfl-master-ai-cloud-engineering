@@ -139,6 +139,21 @@ func TestRouter(t *testing.T) {
 		})
 	})
 
+	t.Run("/api/v1/price/product/:productId", func(t *testing.T) {
+		t.Run("should call GET handler", func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r := httptest.NewRequest("GET", "/api/v1/price/product/1", nil)
+
+			mockPricesController.EXPECT().GetPricesByProduct(w, mock.Anything).Run(
+				func(_a0 http.ResponseWriter, _a1 *http.Request) {
+					_a0.WriteHeader(http.StatusOK)
+				})
+
+			router.ServeHTTP(w, r)
+			assert.Equal(t, http.StatusOK, w.Code)
+		})
+	})
+
 	t.Run("/api/v1/price/:productId/:userId", func(t *testing.T) {
 		t.Run("should call GET handler", func(t *testing.T) {
 			w := httptest.NewRecorder()
