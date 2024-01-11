@@ -140,7 +140,7 @@ func createContentForPrices(priceRepository prices.Repository) {
 			Price:     0.55,
 		},
 		{
-			UserId:    1,
+			UserId:    3,
 			ProductId: 3,
 			Price:     0.55,
 		},
@@ -164,12 +164,12 @@ func createContentForProducts(productRepository products.Repository) {
 		{
 			Id:          2,
 			Description: "Lauchzwiebeln",
-			Ean:         "5001819040871",
+			Ean:         "4001686323397",
 		},
 		{
 			Id:          3,
 			Description: "Mehl",
-			Ean:         "5001819049871",
+			Ean:         "4021375100887",
 		},
 	}
 
