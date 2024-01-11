@@ -15,5 +15,9 @@
                 {totalMerchant}
             </strong>
         </p>
+        <p class="text-gray-dark mt-3 text-xs">
+            Demnächst erfährst du hier, wo dein Einkauf am günstigsten ist.<br>
+            Diese Feature muss noch implementiert werden.
+        </p>
     </div>
 {/if}
