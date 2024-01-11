@@ -13,6 +13,7 @@ import (
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/api/http/router"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/api/rpc"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/auth"
+	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/auth/utils"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/config"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/crypto"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/user"
@@ -115,7 +116,11 @@ func startGRPCServer(ctx context.Context, wg *sync.WaitGroup, configuration *con
 func createTokenGenerator(configuration *config.ServiceConfiguration) auth.TokenGenerator {
 	tokenGenerator, err := auth.NewJwtTokenGenerator(auth.JwtConfig{PrivateKey: configuration.JwtConfig.PrivateKey})
 	if err != nil {
-		panic(fmt.Sprintf("Can't generate token generator: %v", err))
+		log.Println(fmt.Sprintf("Falling back to random private key. Can't use key from config: %v", err))
+		tokenGenerator, err = auth.NewJwtTokenGenerator(auth.JwtConfig{PrivateKey: utils.GenerateRandomECDSAPrivateKeyAsPEM()})
+		if err != nil {
+			panic(fmt.Sprintf("Can't create a token generator: %v", err))
+		}
 	}
 	return tokenGenerator
 }
