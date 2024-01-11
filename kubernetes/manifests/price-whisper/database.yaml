@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: database-config
+  name: database-secrets
   namespace: price-whisper
   annotations:
     author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
@@ -51,9 +51,9 @@ spec:
         app: database
     spec:
       volumes:
-        - name: database-config
+        - name: database-secrets
           secret:
-            secretName: database-config
+            secretName: database-secrets
         - name: database-data
           persistentVolumeClaim:
             claimName: database-data
@@ -64,7 +64,7 @@ spec:
           ports:
             - containerPort: 4001
           volumeMounts:
-            - name: database-config
+            - name: database-secrets
               mountPath: /rqlite/config
             - name: database-data
               mountPath: /rqlite/file
