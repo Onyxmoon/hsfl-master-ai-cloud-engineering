@@ -6,7 +6,7 @@ services:
       context: ./
       dockerfile: ./src/http-proxy-service/Dockerfile
     environment:
-      - PROXY_CONFIG_PATH=./config/proxyConfig.docker.yaml
+      PROXY_CONFIG_PATH: "./config/proxyConfig.docker.yaml"
     volumes:
       - ./src/http-proxy-service/config:/config
     ports:
@@ -85,8 +85,8 @@ configs:
     content: |
       [
         {
-          "username": "user",
-          "password": "password",
+          "username": "db-user",
+          "password": "db-pw-changeMe!",
           "perms": [ "all" ]
         },
         {
