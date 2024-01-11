@@ -181,6 +181,64 @@ func (_c *MockRepository_FindAll_Call) RunAndReturn(run func() ([]*model.Price, 
 	return _c
 }
 
+// FindAllByProduct provides a mock function with given fields: productId
+func (_m *MockRepository) FindAllByProduct(productId uint64) ([]*model.Price, error) {
+	ret := _m.Called(productId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FindAllByProduct")
+	}
+
+	var r0 []*model.Price
+	var r1 error
+	if rf, ok := ret.Get(0).(func(uint64) ([]*model.Price, error)); ok {
+		return rf(productId)
+	}
+	if rf, ok := ret.Get(0).(func(uint64) []*model.Price); ok {
+		r0 = rf(productId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*model.Price)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+		r1 = rf(productId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_FindAllByProduct_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindAllByProduct'
+type MockRepository_FindAllByProduct_Call struct {
+	*mock.Call
+}
+
+// FindAllByProduct is a helper method to define mock.On call
+//   - productId uint64
+func (_e *MockRepository_Expecter) FindAllByProduct(productId interface{}) *MockRepository_FindAllByProduct_Call {
+	return &MockRepository_FindAllByProduct_Call{Call: _e.mock.On("FindAllByProduct", productId)}
+}
+
+func (_c *MockRepository_FindAllByProduct_Call) Run(run func(productId uint64)) *MockRepository_FindAllByProduct_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(uint64))
+	})
+	return _c
+}
+
+func (_c *MockRepository_FindAllByProduct_Call) Return(_a0 []*model.Price, _a1 error) *MockRepository_FindAllByProduct_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_FindAllByProduct_Call) RunAndReturn(run func(uint64) ([]*model.Price, error)) *MockRepository_FindAllByProduct_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // FindAllByUser provides a mock function with given fields: userId
 func (_m *MockRepository) FindAllByUser(userId uint64) ([]*model.Price, error) {
 	ret := _m.Called(userId)

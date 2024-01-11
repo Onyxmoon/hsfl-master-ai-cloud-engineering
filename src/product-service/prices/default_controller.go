@@ -49,6 +49,26 @@ func (controller *DefaultController) GetPricesByUser(writer http.ResponseWriter,
 	}
 }
 
+func (controller *DefaultController) GetPricesByProduct(writer http.ResponseWriter, request *http.Request) {
+	productId, err := strconv.ParseUint(request.Context().Value("productId").(string), 10, 64)
+
+	if err != nil {
+		http.Error(writer, "Invalid productId", http.StatusBadRequest)
+		return
+	}
+	values, err := controller.priceRepository.FindAllByProduct(productId)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(writer).Encode(values)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func (controller *DefaultController) PostPrice(writer http.ResponseWriter, request *http.Request) {
 	productId, productIdErr := strconv.ParseUint(request.Context().Value("productId").(string), 10, 64)
 	userId, userIdErr := strconv.ParseUint(request.Context().Value("userId").(string), 10, 64)

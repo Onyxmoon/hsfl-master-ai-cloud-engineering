@@ -222,6 +222,79 @@ func TestRQLiteRepository_FindAllByUser(t *testing.T) {
 	})
 }
 
+func TestRQLiteRepository_FindAllByProduct(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rqliteRepository := RQLiteRepository{
+		db:           db,
+		priceBuilder: sqlbuilder.NewStruct(new(model.Price)).For(sqlbuilder.SQLite),
+	}
+
+	productIdA := uint64(1)
+
+	pricesMerchantA := []*model.Price{
+		{
+			UserId:    1,
+			ProductId: productIdA,
+			Price:     2.99,
+		},
+		{
+			UserId:    2,
+			ProductId: productIdA,
+			Price:     0.55,
+		},
+	}
+
+	t.Run("Successfully fetch all prices from product", func(t *testing.T) {
+
+		mock.ExpectBegin()
+		mock.ExpectQuery(fmt.Sprintf(`SELECT (.+) FROM %[1]s WHERE %[1]s.productId = \?`, RQLiteTableName)).
+			WithArgs(productIdA).
+			WillReturnRows(sqlmock.NewRows([]string{"userId", "productId", "price"}).
+				AddRow(pricesMerchantA[0].UserId, pricesMerchantA[0].ProductId, pricesMerchantA[0].Price).
+				AddRow(pricesMerchantA[1].UserId, pricesMerchantA[1].ProductId, pricesMerchantA[1].Price))
+		mock.ExpectCommit()
+
+		fetchedProducts, err := rqliteRepository.FindAllByProduct(productIdA)
+
+		if err != nil {
+			t.Error("Can't fetch prices")
+		}
+
+		if len(fetchedProducts) != len(pricesMerchantA) {
+			t.Errorf("Unexpected price count. Expected %d, got %d", len(pricesMerchantA), len(fetchedProducts))
+		}
+
+		if !reflect.DeepEqual(pricesMerchantA, fetchedProducts) {
+			t.Error("Fetched prices do not match expected prices")
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("there were unfulfilled expections: %s", err)
+		}
+	})
+
+	t.Run("Database error should return error", func(t *testing.T) {
+		mock.ExpectBegin()
+		mock.ExpectQuery(fmt.Sprintf(`SELECT (.+) FROM %[1]s WHERE %[1]s.productId = \?`, RQLiteTableName)).
+			WithArgs(productIdA).
+			WillReturnError(errors.New("database has failed"))
+		mock.ExpectRollback()
+
+		_, err := rqliteRepository.FindAllByProduct(productIdA)
+		if err == nil {
+			t.Error("there should be an error")
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("there were unfulfilled expections: %s", err)
+		}
+	})
+}
+
 func TestRQLiteRepository_FindByIds(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {

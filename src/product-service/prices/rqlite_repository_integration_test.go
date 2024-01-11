@@ -70,17 +70,17 @@ func TestIntegrationRQLiteRepository(t *testing.T) {
 		}
 
 		t.Run("Successfully fetch all prices", func(t *testing.T) {
-			fetchedProducts, err := rqliteRepository.FindAll()
+			fetchedPrices, err := rqliteRepository.FindAll()
 
 			if err != nil {
 				t.Error("Can't fetch prices")
 			}
 
-			if len(fetchedProducts) != len(prices) {
-				t.Errorf("Unexpected price count. Expected %d, got %d", len(prices), len(fetchedProducts))
+			if len(fetchedPrices) != len(prices) {
+				t.Errorf("Unexpected price count. Expected %d, got %d", len(prices), len(fetchedPrices))
 			}
 
-			if !reflect.DeepEqual(prices, fetchedProducts) {
+			if !reflect.DeepEqual(prices, fetchedPrices) {
 				t.Error("Fetched prices do not match expected prices")
 			}
 		})
@@ -112,17 +112,59 @@ func TestIntegrationRQLiteRepository(t *testing.T) {
 		}
 
 		t.Run("Successfully fetch all prices from user", func(t *testing.T) {
-			fetchedProducts, err := rqliteRepository.FindAllByUser(userIdMerchantA)
+			fetchedPrices, err := rqliteRepository.FindAllByUser(userIdMerchantA)
 
 			if err != nil {
 				t.Error("Can't fetch prices")
 			}
 
-			if len(fetchedProducts) != len(pricesMerchantA) {
-				t.Errorf("Unexpected price count. Expected %d, got %d", len(pricesMerchantA), len(fetchedProducts))
+			if len(fetchedPrices) != len(pricesMerchantA) {
+				t.Errorf("Unexpected price count. Expected %d, got %d", len(pricesMerchantA), len(fetchedPrices))
 			}
 
-			if !reflect.DeepEqual(pricesMerchantA, fetchedProducts) {
+			if !reflect.DeepEqual(pricesMerchantA, fetchedPrices) {
+				t.Error("Fetched prices do not match expected prices")
+			}
+		})
+
+		err := rqliteRepository.cleanTable()
+		if err != nil {
+			t.Error(err)
+		}
+	})
+
+	t.Run("TestIntegrationRQLiteRepository_FindAllByProduct", func(t *testing.T) {
+		productIdA := uint64(1)
+
+		pricesMerchantA := []*model.Price{
+			{
+				UserId:    1,
+				ProductId: productIdA,
+				Price:     2.99,
+			},
+			{
+				UserId:    2,
+				ProductId: productIdA,
+				Price:     0.55,
+			},
+		}
+
+		for _, price := range pricesMerchantA {
+			rqliteRepository.Create(price)
+		}
+
+		t.Run("Successfully fetch all prices from product", func(t *testing.T) {
+			fetchedPrices, err := rqliteRepository.FindAllByProduct(productIdA)
+
+			if err != nil {
+				t.Error("Can't fetch prices")
+			}
+
+			if len(fetchedPrices) != len(pricesMerchantA) {
+				t.Errorf("Unexpected price count. Expected %d, got %d", len(pricesMerchantA), len(fetchedPrices))
+			}
+
+			if !reflect.DeepEqual(pricesMerchantA, fetchedPrices) {
 				t.Error("Fetched prices do not match expected prices")
 			}
 		})
@@ -143,12 +185,12 @@ func TestIntegrationRQLiteRepository(t *testing.T) {
 		rqliteRepository.Create(&price)
 
 		t.Run("Successfully fetch price", func(t *testing.T) {
-			fetchedProduct, err := rqliteRepository.FindByIds(price.UserId, price.ProductId)
+			fetchedPrice, err := rqliteRepository.FindByIds(price.UserId, price.ProductId)
 			if err != nil {
 				t.Errorf("Can't find expected price with userId %d and productId %d: %v", price.UserId, price.ProductId, err)
 			}
 
-			if !reflect.DeepEqual(price, *fetchedProduct) {
+			if !reflect.DeepEqual(price, *fetchedPrice) {
 				t.Error("Fetched price does not match original price")
 			}
 		})
