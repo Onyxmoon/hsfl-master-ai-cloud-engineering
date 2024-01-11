@@ -25,10 +25,11 @@ export const load = async (context: { params: { id: string } }): Promise<Promise
 
     const { id } = context.params;
     const token: string | null = sessionStorage.getItem('access_token');
+    const userId: string | null = sessionStorage.getItem('user_id');
 
-    if (! token || ! id) return data;
+    if (! token || ! id || ! userId) return data;
 
-    const apiUrlList: string = `/api/v1/shoppinglist/${id}/2`;
+    const apiUrlList: string = `/api/v1/shoppinglist/${id}/${userId}`;
     const apiUrlEntries: string = `/api/v1/shoppinglistentries/${id}`;
     const requestOptions: object = { headers: { 'Authorization': `Bearer ${token}` }};
 

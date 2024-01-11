@@ -21,7 +21,7 @@
 
 <div class="relative my-5 lg:my-8">
     <label for="{id}" class="text-sm text-gray-dark font-medium block mb-2">
-        {label}: *
+        {placeholder}: *
     </label>
 
     <Select
