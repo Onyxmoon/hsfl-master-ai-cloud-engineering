@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: database-secrets
+  namespace: price-whisper
+  annotations:
+    author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
+stringData:
+  config.json: |
+    [
+      {
+        "username": "username",
+        "password": "changeMe!",
+        "perms": [ "all" ]
+      },
+      {
+        "username": "*",
+        "perms": ["ready"]
+      }
+    ]
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: database-data
+  namespace: price-whisper
+  annotations:
+    author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database-deployment
+  namespace: price-whisper
+  annotations:
+    author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      volumes:
+        - name: database-secrets
+          secret:
+            secretName: database-secrets
+        - name: database-data
+          persistentVolumeClaim:
+            claimName: database-data
+      containers:
+        - name: database-container
+          image: rqlite/rqlite:8.15.0
+          args: [ "-node-id", "1", "-auth", "/rqlite/config/config.json", "-http-adv-addr", "database:4001" ]
+          ports:
+            - containerPort: 4001
+          volumeMounts:
+            - name: database-secrets
+              mountPath: /rqlite/config
+            - name: database-data
+              mountPath: /rqlite/file
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: database
+  namespace: price-whisper
+  annotations:
+    author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
+spec:
+  selector:
+    app: database
+  ports:
+    - protocol: TCP
+      port: 4001
+      targetPort: 4001
+
+

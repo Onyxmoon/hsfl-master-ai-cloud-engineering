@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  namespace: price-whisper
+  annotations:
+    author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web-container
+          image: onyxmoon/pw-web-service:latest
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: price-whisper
+  annotations:
+    author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
+spec:
+  selector:
+    app: web
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
