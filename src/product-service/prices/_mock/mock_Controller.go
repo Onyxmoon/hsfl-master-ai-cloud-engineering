@@ -123,6 +123,40 @@ func (_c *MockController_GetPrices_Call) RunAndReturn(run func(http.ResponseWrit
 	return _c
 }
 
+// GetPricesByProduct provides a mock function with given fields: _a0, _a1
+func (_m *MockController) GetPricesByProduct(_a0 http.ResponseWriter, _a1 *http.Request) {
+	_m.Called(_a0, _a1)
+}
+
+// MockController_GetPricesByProduct_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPricesByProduct'
+type MockController_GetPricesByProduct_Call struct {
+	*mock.Call
+}
+
+// GetPricesByProduct is a helper method to define mock.On call
+//   - _a0 http.ResponseWriter
+//   - _a1 *http.Request
+func (_e *MockController_Expecter) GetPricesByProduct(_a0 interface{}, _a1 interface{}) *MockController_GetPricesByProduct_Call {
+	return &MockController_GetPricesByProduct_Call{Call: _e.mock.On("GetPricesByProduct", _a0, _a1)}
+}
+
+func (_c *MockController_GetPricesByProduct_Call) Run(run func(_a0 http.ResponseWriter, _a1 *http.Request)) *MockController_GetPricesByProduct_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *MockController_GetPricesByProduct_Call) Return() *MockController_GetPricesByProduct_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *MockController_GetPricesByProduct_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *MockController_GetPricesByProduct_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetPricesByUser provides a mock function with given fields: _a0, _a1
 func (_m *MockController) GetPricesByUser(_a0 http.ResponseWriter, _a1 *http.Request) {
 	_m.Called(_a0, _a1)
