@@ -9,7 +9,6 @@ import (
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/crypto"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/user"
 	"log"
-	"strconv"
 )
 
 type UserServiceServer struct {
@@ -28,18 +27,19 @@ func NewUserServiceServer(userRepository *user.Repository, tokenGenerator auth.T
 
 func (u *UserServiceServer) ValidateUserToken(_ context.Context, request *proto.ValidateUserTokenRequest) (*proto.ValidateUserTokenResponse, error) {
 	claims, err := u.tokenGenerator.VerifyToken(request.Token)
+	println(claims, err)
 	if err != nil {
 		log.Println("Verification failed: ", err.Error())
 		return nil, status.Error(codes.Unauthenticated, err.Error())
 	}
 
-	id, err := strconv.ParseUint(claims["id"].(string), 10, 64)
-	if err != nil {
+	id, exists := claims["id"].(float64)
+	if !exists {
 		log.Println("Verification failed: Can't find user id in claim.")
 		return nil, status.Error(codes.DataLoss, "Can't find user id in claim.")
 	}
 
-	user, err := (*u.userRepository).FindById(id)
+	user, err := (*u.userRepository).FindById(uint64(id))
 	if err != nil {
 		log.Println("Verification failed: ", err.Error())
 		return nil, status.Error(codes.NotFound, err.Error())

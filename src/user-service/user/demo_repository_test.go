@@ -8,7 +8,6 @@ import (
 )
 
 func TestDemoRepository_CreateUser(t *testing.T) {
-	// Prepare test
 	demoRepository := NewDemoRepository()
 
 	user := model.User{
@@ -125,8 +124,7 @@ func TestDemoRepository_FindAllByRole(t *testing.T) {
 	}
 
 	t.Run("Fetch all users by merchant role", func(t *testing.T) {
-		merchantRole := model.Merchant
-		fetchedUsers, err := demoRepository.FindAllByRole(&merchantRole)
+		fetchedUsers, err := demoRepository.FindAllByRole(model.Merchant)
 		if err != nil {
 			t.Error("Can't fetch users")
 		}

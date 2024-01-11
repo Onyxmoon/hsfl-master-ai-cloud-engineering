@@ -1,0 +1,32 @@
+with-expecter: true
+packages:
+  hsfl.de/group6/hsfl-master-ai-cloud-engineering/product-service/products:
+    config:
+      dir: "./src/product-service/products/_mock"
+    interfaces:
+      Controller:
+      Repository:
+  hsfl.de/group6/hsfl-master-ai-cloud-engineering/product-service/prices:
+    config:
+      dir: "./src/product-service/prices/_mock"
+    interfaces:
+      Controller:
+      Repository:
+  hsfl.de/group6/hsfl-master-ai-cloud-engineering/shoppinglist-service/userShoppingList:
+    config:
+      dir: "./src/shoppinglist-service/userShoppingList/_mock"
+    interfaces:
+      Controller:
+      Repository:
+  hsfl.de/group6/hsfl-master-ai-cloud-engineering/shoppinglist-service/userShoppingListEntry:
+    config:
+      dir: "./src/shoppinglist-service/userShoppingListEntry/_mock"
+    interfaces:
+      Controller:
+      Repository:
+  hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/user:
+    config:
+      dir: "./src/user-service/user/_mock"
+    interfaces:
+      Controller:
+      Repository:

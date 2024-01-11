@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: users-secrets
+  namespace: price-whisper
+  annotations:
+    author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
+stringData:
+  RQLITE_USER: "username"
+  RQLITE_PASSWORD: "changeMe!"
+  JWT_PRIVATE_KEY: |
+    # provide ecdsa private key as string or container local file path
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: users-config
+  namespace: price-whisper
+  annotations:
+    author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
+data:
+  RQLITE_HOST: "database"
+  RQLITE_PORT: "4001"
+  HTTP_SERVER_PORT: "3001"
+  GRPC_SERVER_PORT: "50051"
+  GRPC_USER_SERVICE_TARGET: "users:50051"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users-deployment
+  namespace: price-whisper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: users
+  template:
+    metadata:
+      labels:
+        app: users
+    spec:
+      initContainers:
+        - name: wait-for-database
+          image: busybox
+          command: [ "/bin/sh", "-c" ]
+          args: [ "until wget --spider -S http://database:4001/readyz 2>&1 | grep 'HTTP/1.1 200 OK'; do echo 'Waiting for RQLite...'; sleep 2; done;" ]
+      containers:
+        - name: users-container
+          image: onyxmoon/pw-user-service:latest
+          envFrom:
+            - secretRef:
+                name: users-secrets
+            - configMapRef:
+                name: users-config
+          ports:
+            - containerPort: 3001
+            - containerPort: 50051
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: users
+  namespace: price-whisper
+spec:
+  selector:
+    app: users
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3001
+      targetPort: 3001
+    - name: grpc
+      protocol: TCP
+      port: 50051
+      targetPort: 50051

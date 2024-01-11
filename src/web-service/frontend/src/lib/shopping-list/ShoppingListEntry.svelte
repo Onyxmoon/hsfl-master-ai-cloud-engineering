@@ -3,6 +3,13 @@
     import Checkbox from "$lib/forms/Checkbox.svelte";
     import {handleErrors} from "../../assets/helper/handleErrors";
     import Trash from "../../assets/svg/Trash.svelte";
+    import {fetchHelper} from "../../assets/helper/fetchHelper";
+
+    interface Price {
+        userId: number,
+        productId: number,
+        price: number,
+    }
 
     type ViewState = "detailed" | "compressed";
 
@@ -11,27 +18,35 @@
     export let product: { id: number, description: string, ean: number };
     export let view: ViewState = "detailed";
 
-    let price: { price: number } = { price: 0 };
-    let merchant: string = 'Aldi';
-
-    const apiUrlPrice = `/api/v1/price/${product.id}/2`;
+    let prices: Price[] | undefined;
+    let merchants: any[] = [];
+    const token: string | null = sessionStorage.getItem('access_token');
 
     const dispatch = createEventDispatcher();
 
     onMount(async () => {
-        fetch(apiUrlPrice)
-            .then(handleErrors)
-            .then(data => price = data)
-            .catch(error => console.error("Failed to fetch data:", error.message));
+        const apiUrl: string = `/api/v1/price/product/${product.id}`;
+        const data: any = await fetchHelper(apiUrl);
+        prices = findBestPrice(data);
+
+        if (prices.length > 0) {
+            const userIds: number[] = prices.map(price => price.userId);
+
+            for (const userId of userIds) {
+                const apiUrlUser: string = `/api/v1/user/${userId}`;
+                merchants = merchants.concat(await fetchHelper(apiUrlUser));
+                console.log(merchants)
+            }
+        }
     });
 
     function updateShoppingListEntry(): void {
-        if (! listId || ! product.id ) return;
+        if (! listId || ! product.id || ! token) return;
 
         const apiUrl: string = `/api/v1/shoppinglistentries/${listId}/${product.id}`;
         const requestOptions = {
             method: "PUT",
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Authorization': `Bearer ${token}` },
             body: `{ "count": ${entry.count}, "checked": ${entry.checked} }`,
         };
 
@@ -42,18 +57,25 @@
     }
 
     function deleteShoppingListEntry(): void {
-        if (! listId || ! product.id) return;
+        if (! listId || ! product.id || ! token) return;
 
         const apiUrl: string = `/api/v1/shoppinglistentries/${listId}/${product.id}`;
         const requestOptions = {
             method: "DELETE",
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Authorization': `Bearer ${token}` },
         };
 
         fetch(apiUrl, requestOptions)
             .then(handleErrors)
             .then(()=> { location.reload(); dispatch('updateCheckedEntriesCount', { state: true }) })
             .catch(error => console.error("Failed to fetch data:", error.message));
+    }
+
+    function findBestPrice(prices: any[]): Price[] {
+        if (prices.length === 0) return [];
+
+        const lowestPrice: number = Math.min(...prices.map(price => price.price));
+        return prices.filter(price => price.price === lowestPrice);
     }
 </script>
 
@@ -74,11 +96,17 @@
             <Trash classes="w-4 h-4 md:w-5 md:h-5" />
         </button>
     </div>
-    {#if view === 'detailed' && price.price}
+    {#if view === 'detailed' && prices && prices.length > 0 && merchants.length > 0}
         <p class="text-gray-dark mt-1 ml-[2.1rem] text-sm flex flex-wrap items-center gap-2 lg:text-sm { entry.checked ? 'opacity-50' : '' }">
             Am günstigsten bei
-            <strong class="text-green-dark font-semibold">{merchant}</strong>für
-            <strong class="text-green-dark font-semibold">{price.price} €</strong>
+            <strong class="text-green-dark font-semibold">
+                {#each merchants as merchant (merchant.id)}
+                    {merchant.name}
+                    {#if merchant !== merchants[merchants.length - 1]}, {/if}
+                {/each}
+            </strong>
+            für
+            <strong class="text-green-dark font-semibold">{prices[0].price ?? 0} €</strong>
         </p>
     {/if}
 </li>

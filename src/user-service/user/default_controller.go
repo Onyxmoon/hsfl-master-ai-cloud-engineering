@@ -28,22 +28,20 @@ func (controller defaultController) GetUsersByRole(writer http.ResponseWriter, r
 		return
 	}
 
-	_, exists := request.Context().Value("auth_userId").(int)
+	_, exists := request.Context().Value("auth_userId").(uint64)
 	if !exists {
 		writer.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	userRoleModel := getUserRole(userRole)
-
-	if userRoleModel == nil {
-		http.Error(writer, "Unknown user role", http.StatusNotFound)
+	values, err := controller.userRepository.FindAllByRole(model.Role(userRole))
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	values, err := controller.userRepository.FindAllByRole(userRoleModel)
-	if err != nil {
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
+	if len(values) == 0 {
+		writer.WriteHeader(http.StatusNotFound)
 		return
 	}
 
@@ -72,22 +70,33 @@ func (controller defaultController) GetUser(writer http.ResponseWriter, request 
 		return
 	}
 
-	authUserId, _ := request.Context().Value("auth_userId").(int)
-	authUserRole, _ := request.Context().Value("auth_userRole").(int)
+	authUserId, _ := request.Context().Value("auth_userId").(uint64)
+	authUserRole, _ := request.Context().Value("auth_userRole").(model.Role)
 
-	if ((uint64(authUserId)) == userId) ||
-		(model.Role(authUserRole) == model.Administrator) {
-		value, err := controller.userRepository.FindById(userId)
+	value, err := controller.userRepository.FindById(userId)
+
+	if (authUserId == userId) ||
+		(authUserRole == model.Administrator) ||
+		(value != nil && value.Role == model.Merchant) {
+
 		if err != nil {
 			if err.Error() == ErrorUserNotFound {
 				http.Error(writer, err.Error(), http.StatusNotFound)
 				return
 			}
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		responseValue := JsonFormatGetUserResponse{
+			ID:    value.Id,
+			Email: value.Email,
+			Name:  value.Name,
+			Role:  value.Role,
 		}
 
 		writer.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(writer).Encode(value)
+		err = json.NewEncoder(writer).Encode(responseValue)
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 		}
@@ -109,11 +118,11 @@ func (controller defaultController) PutUser(writer http.ResponseWriter, request 
 		return
 	}
 
-	authUserId, _ := request.Context().Value("auth_userId").(int)
-	authUserRole, _ := request.Context().Value("auth_userRole").(int)
+	authUserId, _ := request.Context().Value("auth_userId").(uint64)
+	authUserRole, _ := request.Context().Value("auth_userRole").(model.Role)
 
-	if ((uint64(authUserId)) == userId) ||
-		(model.Role(authUserRole) == model.Administrator) {
+	if (authUserId == userId) ||
+		(authUserRole == model.Administrator) {
 		if _, err := controller.userRepository.Update(&model.User{
 			Id:    userId,
 			Email: requestData.Email,
@@ -134,26 +143,16 @@ func (controller defaultController) DeleteUser(writer http.ResponseWriter, reque
 		return
 	}
 
-	authUserId, _ := request.Context().Value("auth_userId").(int)
-	authUserRole, _ := request.Context().Value("auth_userRole").(int)
+	authUserId, _ := request.Context().Value("auth_userId").(uint64)
+	authUserRole, _ := request.Context().Value("auth_userRole").(model.Role)
 
-	if ((uint64(authUserId)) == userId) ||
-		(model.Role(authUserRole) == model.Administrator) {
+	if (authUserId == userId) ||
+		(authUserRole == model.Administrator) {
 		if err := controller.userRepository.Delete(&model.User{Id: userId}); err != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	} else {
 		writer.WriteHeader(http.StatusUnauthorized)
-	}
-}
-
-func getUserRole(role uint64) *model.Role {
-	switch model.Role(role) {
-	case model.Customer, model.Merchant, model.Administrator:
-		validRole := model.Role(role)
-		return &validRole
-	default:
-		return nil
 	}
 }

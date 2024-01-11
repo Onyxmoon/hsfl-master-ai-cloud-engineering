@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: shoppinglists-secrets
+  namespace: price-whisper
+  annotations:
+    author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
+stringData:
+  RQLITE_USER: "username"
+  RQLITE_PASSWORD: "changeMe!"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shoppinglists-config
+  namespace: price-whisper
+  annotations:
+    author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
+data:
+  RQLITE_HOST: "database"
+  RQLITE_PORT: "4001"
+  HTTP_SERVER_PORT: "3002"
+  GRPC_USER_SERVICE_TARGET: "users:50051"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shoppinglists-deployment
+  namespace: price-whisper
+  annotations:
+    author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shoppinglists
+  template:
+    metadata:
+      labels:
+        app: shoppinglists
+    spec:
+      initContainers:
+        - name: wait-for-database
+          image: busybox
+          command: [ "/bin/sh", "-c" ]
+          args: [ "until wget --spider -S http://database:4001/readyz 2>&1 | grep 'HTTP/1.1 200 OK'; do echo 'Waiting for RQLite...'; sleep 2; done;" ]
+      containers:
+        - name: shoppinglists-container
+          image: onyxmoon/pw-shoppinglist-service:latest
+          envFrom:
+            - secretRef:
+                name: shoppinglists-secrets
+            - configMapRef:
+                name: shoppinglists-config
+          ports:
+            - containerPort: 3002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shoppinglists
+  namespace: price-whisper
+  annotations:
+    author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
+spec:
+  selector:
+    app: shoppinglists
+  ports:
+    - protocol: TCP
+      port: 3002
+      targetPort: 3002

@@ -1,30 +1,22 @@
+version: "3.8"
+
 services:
   proxy:
-    build:
-      context: ./
-      dockerfile: ./src/http-proxy-service/Dockerfile
     image: onyxmoon/pw-http-proxy-service:latest
     environment:
       - PROXY_CONFIG_PATH=./config/proxyConfig.docker.yaml
+    volumes:
+      - ./src/http-proxy-service/config:/config
     ports:
-      - 8080:8080
+      - "80:8080"
     depends_on:
-      - load-balancer-web
+      - web
     networks:
       - public
       - internal
 
-  load-balancer-web:
-    build:
-      context: ./
-      dockerfile: ./src/load-balancer-service/Dockerfile
-    image: onyxmoon/pw-load-balancer-service:latest
-    environment:
-      - LOAD_BALANCER_CONFIG_PATH=./config/config.web-service.yaml
-    ports:
-      - 3000:3000
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+  web:
+    image: onyxmoon/pw-web-service:latest
     depends_on:
       - products
       - shoppinglists
@@ -33,34 +25,68 @@ services:
       - internal
 
   products:
-    build:
-      context: ./
-      dockerfile: ./src/product-service/Dockerfile
     image: onyxmoon/pw-product-service:latest
-    ports:
-      - 3003:3003
+    env_file:
+      - ./src/product-service/.env
     networks:
       - internal
+    depends_on:
+      database:
+        condition: service_healthy
 
   users:
-    build:
-      context: ./
-      dockerfile: ./src/user-service/Dockerfile
     image: onyxmoon/pw-user-service:latest
-    ports:
-      - 3001:3001
+    env_file:
+      - ./src/user-service/.env
+    volumes:
+      - ./src/user-service/privateKey.pem:/privateKey.pem
     networks:
       - internal
+    depends_on:
+      database:
+        condition: service_healthy
 
   shoppinglists:
-    build:
-      context: ./
-      dockerfile: ./src/shoppinglist-service/Dockerfile
     image: onyxmoon/pw-shoppinglist-service:latest
-    ports:
-      - 3002:3002
+    env_file:
+      - ./src/shoppinglist-service/.env
     networks:
       - internal
+    depends_on:
+      database:
+        condition: service_healthy
+
+  database:
+    image: rqlite/rqlite:8.15.0
+    volumes:
+      - ./var/rqlite:/rqlite/file
+    command: [ "-node-id", "1", "-auth", "/run/secrets/config.json", "-http-adv-addr", "database:4001" ]
+    configs:
+      - source: database
+        target: config.json
+    networks:
+      - internal
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:4001/readyz || exit 1" ]
+      interval: 5s
+      retries: 5
+      start_period: 30s
+      start_interval: 1s
+
+configs:
+  database:
+    content: |
+      [
+        {
+          "username": "user",
+          "password": "password",
+          "perms": [ "all" ]
+        },
+        {
+          "username": "*",
+          "perms": ["ready"]
+        }
+      ]
 
 
 networks:

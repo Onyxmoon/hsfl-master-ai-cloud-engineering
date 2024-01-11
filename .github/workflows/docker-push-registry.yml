@@ -7,8 +7,34 @@ on:
   workflow_dispatch:
 
 jobs:
+  test:
+    name: Testing stage (Test before deployment)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
+          fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination repository.
+
+      - name: Setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.21.0'
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Run Test
+        run: |
+          go test -v hsfl.de/group6/hsfl-master-ai-cloud-engineering/...
   push:
-    name: Build and push to docker hub registry
+    name: Building stage (Build and push to docker hub registry)
+    needs: [test]
     runs-on: ubuntu-latest
 
     steps:
@@ -31,7 +57,7 @@ jobs:
 
       - name: Check and set release version
         run: |
-          echo "RELEASE_VERSION=$(git tag -l --format='%(contents:subject)'${GITHUB_REF#refs/*/})" >> $GITHUB_ENV
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
           echo "RELEASE_VERSION: '$RELEASE_VERSION'"
 
       - if: ${{ env.RELEASE_VERSION != '' && contains(github.ref, 'main') }}
