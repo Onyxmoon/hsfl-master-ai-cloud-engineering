@@ -57,7 +57,8 @@ jobs:
 
       - name: Check and set release version
         run: |
-          echo "RELEASE_VERSION: '${{ github.ref_name }}'"
+          echo "RELEASE_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo "RELEASE_VERSION: '$RELEASE_VERSION'"
 
       - if: ${{ github.ref_name != '' }}
         name: Build and push (versioned)
