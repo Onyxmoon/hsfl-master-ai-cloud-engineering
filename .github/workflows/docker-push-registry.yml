@@ -1,9 +1,9 @@
-name: Deploy to docker
+name: Push to docker
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
 
 jobs:
