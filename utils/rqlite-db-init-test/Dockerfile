@@ -2,8 +2,8 @@ FROM alpine:latest
 
 RUN apk --no-cache add curl jq
 
-COPY ./init.sql ./init.sql
-COPY ./check_and_insert.sh ./check_and_insert.sh
+COPY --chmod=755 init.sql /scripts/
+COPY --chmod=755 check_and_insert.sh /scripts/
 
-RUN chmod +x ./check_and_insert.sh
-CMD ["./check_and_insert.sh"]
+RUN chmod +x /scripts/check_and_insert.sh
+CMD ["/scripts/check_and_insert.sh"]
