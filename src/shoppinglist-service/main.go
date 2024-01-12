@@ -13,9 +13,7 @@ import (
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/shoppinglist-service/api/router"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/shoppinglist-service/config"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/shoppinglist-service/userShoppingList"
-	listModel "hsfl.de/group6/hsfl-master-ai-cloud-engineering/shoppinglist-service/userShoppingList/model"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/shoppinglist-service/userShoppingListEntry"
-	entryModel "hsfl.de/group6/hsfl-master-ai-cloud-engineering/shoppinglist-service/userShoppingListEntry/model"
 	"log"
 	"net/http"
 )
@@ -25,11 +23,9 @@ func main() {
 
 	var shoppingListRepository userShoppingList.Repository = userShoppingList.NewRQLiteRepository(configuration.Database.GetConnectionString())
 	var shoppingListController userShoppingList.Controller = userShoppingList.NewDefaultController(shoppingListRepository)
-	createContentForShoppingLists(shoppingListRepository)
 
 	var shoppingListEntryRepository userShoppingListEntry.Repository = userShoppingListEntry.NewRQLiteRepository(configuration.Database.GetConnectionString())
 	var shoppingListEntryController userShoppingListEntry.Controller = userShoppingListEntry.NewDefaultController(shoppingListEntryRepository, shoppingListRepository)
-	createContentForShoppingListEntries(shoppingListEntryRepository)
 
 	startHTTPServer(configuration, &shoppingListController, &shoppingListEntryController)
 }
@@ -66,69 +62,5 @@ func startHTTPServer(configuration *config.ServiceConfiguration, shoppingListCon
 
 	if err := server.Shutdown(context.Background()); err != nil {
 		log.Fatalf("HTTP Server Shutdown Failed:%v", err)
-	}
-}
-
-func createContentForShoppingListEntries(shoppingListEntryRepository userShoppingListEntry.Repository) {
-	shoppingListEntries := []*entryModel.UserShoppingListEntry{
-		{
-			ShoppingListId: 1,
-			ProductId:      1,
-			Count:          1,
-			Note:           "",
-			Checked:        false,
-		},
-		{
-			ShoppingListId: 1,
-			ProductId:      3,
-			Count:          1,
-			Note:           "",
-			Checked:        false,
-		},
-		{
-			ShoppingListId: 1,
-			ProductId:      100,
-			Count:          1,
-			Note:           "",
-			Checked:        false,
-		},
-		{
-			ShoppingListId: 2,
-			ProductId:      3,
-			Count:          1,
-			Note:           "",
-			Checked:        false,
-		},
-	}
-
-	for _, price := range shoppingListEntries {
-		_, err := shoppingListEntryRepository.Create(price)
-		if err != nil {
-			return
-		}
-	}
-}
-
-func createContentForShoppingLists(shoppingListRepository userShoppingList.Repository) {
-	shoppingLists := []*listModel.UserShoppingList{
-		{
-			Id:          1,
-			UserId:      2,
-			Description: "Frühstück mit Anne",
-			Completed:   false,
-		},
-		{
-			Id:          2,
-			UserId:      2,
-			Description: "Geburtstagskuchen",
-			Completed:   false,
-		},
-	}
-
-	for _, price := range shoppingLists {
-		_, err := shoppingListRepository.Create(price)
-		if err != nil {
-			return
-		}
 	}
 }

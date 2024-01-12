@@ -93,6 +93,17 @@ services:
       start_period: 30s
       start_interval: 1s
 
+  database-rqlite-test-data-init:
+    image: onyxmoon/pw-database-rqlite-test-data-init:latest
+    environment:
+      RQLITE_HOST: "database"
+      RQLITE_PORT: 4001
+      RQLITE_USER: "db-user"
+      RQLITE_PASSWORD: "db-pw-changeMe!"
+    depends_on:
+      database:
+        condition: service_healthy
+
 configs:
   proxy:
     content: |
