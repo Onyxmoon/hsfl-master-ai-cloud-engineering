@@ -15,9 +15,7 @@ import (
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/product-service/api/rpc"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/product-service/config"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/product-service/prices"
-	priceModel "hsfl.de/group6/hsfl-master-ai-cloud-engineering/product-service/prices/model"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/product-service/products"
-	productModel "hsfl.de/group6/hsfl-master-ai-cloud-engineering/product-service/products/model"
 	"log"
 	"net"
 	"net/http"
@@ -32,11 +30,9 @@ func main() {
 
 	var productRepository products.Repository = products.NewRQLiteRepository(configuration.Database.GetConnectionString())
 	var productsController products.Controller = products.NewCoalescingController(productRepository)
-	createContentForProducts(productRepository)
 
 	var priceRepository prices.Repository = prices.NewRQLiteRepository(configuration.Database.GetConnectionString())
 	var pricesController prices.Controller = prices.NewCoalescingController(priceRepository)
-	createContentForPrices(priceRepository)
 
 	var wg sync.WaitGroup
 
@@ -120,63 +116,4 @@ func startGRPCServer(ctx context.Context, wg *sync.WaitGroup, configuration *con
 
 	<-ctx.Done()
 	grpcServer.GracefulStop()
-}
-
-func createContentForPrices(priceRepository prices.Repository) {
-	pricesSlice := []*priceModel.Price{
-		{
-			UserId:    2,
-			ProductId: 1,
-			Price:     2.99,
-		},
-		{
-			UserId:    2,
-			ProductId: 2,
-			Price:     5.99,
-		},
-		{
-			UserId:    2,
-			ProductId: 3,
-			Price:     0.55,
-		},
-		{
-			UserId:    3,
-			ProductId: 3,
-			Price:     0.55,
-		},
-	}
-
-	for _, price := range pricesSlice {
-		_, err := priceRepository.Create(price)
-		if err != nil {
-			return
-		}
-	}
-}
-
-func createContentForProducts(productRepository products.Repository) {
-	productSlice := []*productModel.Product{
-		{
-			Id:          1,
-			Description: "Strauchtomaten",
-			Ean:         "4014819040771",
-		},
-		{
-			Id:          2,
-			Description: "Lauchzwiebeln",
-			Ean:         "4001686323397",
-		},
-		{
-			Id:          3,
-			Description: "Mehl",
-			Ean:         "4021375100887",
-		},
-	}
-
-	for _, product := range productSlice {
-		_, err := productRepository.Create(product)
-		if err != nil {
-			return
-		}
-	}
 }
