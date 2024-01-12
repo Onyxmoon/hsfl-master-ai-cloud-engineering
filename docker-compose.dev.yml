@@ -80,6 +80,16 @@ services:
       start_period: 30s
       start_interval: 1s
 
+  database-init-test:
+    build:
+      context: ./utils/rqlite-db-init-test/
+      dockerfile: Dockerfile
+    env_file:
+      - ./utils/rqlite-db-init-test/.env
+    depends_on:
+      database:
+        condition: service_healthy
+
 configs:
   database:
     content: |
