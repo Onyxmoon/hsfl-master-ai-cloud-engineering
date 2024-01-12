@@ -8,20 +8,23 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/user/model"
+	"os"
 	"reflect"
 	"testing"
 	"time"
 )
-
-const TestPort = "7001"
 
 func TestIntegrationRQLiteRepository(t *testing.T) {
 	container, err := prepareIntegrationTestRQLiteDatabase()
 	if err != nil {
 		t.Error(err)
 	}
+	mappedPort, err := container.MappedPort(context.Background(), "4001/tcp")
+	if err != nil {
+		t.Error(err)
+	}
 
-	rqliteRepository := NewRQLiteRepository("http://localhost:" + TestPort + "/?disableClusterDiscovery=true")
+	rqliteRepository := NewRQLiteRepository("http://localhost:" + mappedPort.Port() + "/?disableClusterDiscovery=true")
 
 	t.Run("TestIntegrationRQLiteRepository_Create", func(t *testing.T) {
 		user := model.User{
@@ -345,7 +348,8 @@ func TestIntegrationRQLiteRepository(t *testing.T) {
 	})
 
 	t.Cleanup(func() {
-		err = container.Stop(context.Background(), nil)
+		os.Setenv("TESTCONTAINERS_RYUK_DISABLED", "false")
+		err = container.Terminate(context.Background())
 		if err != nil {
 			return
 		}
@@ -353,9 +357,10 @@ func TestIntegrationRQLiteRepository(t *testing.T) {
 }
 
 func prepareIntegrationTestRQLiteDatabase() (testcontainers.Container, error) {
+	os.Setenv("TESTCONTAINERS_RYUK_DISABLED", "true")
 	request := testcontainers.ContainerRequest{
 		Image:        "rqlite/rqlite:8.15.0",
-		ExposedPorts: []string{TestPort + ":4001/tcp"},
+		ExposedPorts: []string{"4001/tcp"},
 		WaitingFor: wait.ForAll(
 			wait.ForListeningPort("4001/tcp"),
 			wait.ForLog(`.*HTTP API available at.*`).AsRegexp(),
