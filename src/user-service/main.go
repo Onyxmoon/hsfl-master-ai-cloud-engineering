@@ -17,7 +17,6 @@ import (
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/config"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/crypto"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/user"
-	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/user/model"
 	"log"
 	"net"
 	"net/http"
@@ -31,7 +30,6 @@ func main() {
 	var configuration = loadConfiguration()
 
 	var usersRepository user.Repository = user.NewRQLiteRepository(configuration.Database.GetConnectionString())
-	usersRepository = createMockRepository(usersRepository)
 	var usersController user.Controller = user.NewDefaultController(usersRepository)
 
 	var tokenGenerator = createTokenGenerator(configuration)
@@ -133,42 +131,4 @@ func createLoginHandler(userRepository user.Repository, tokenGenerator auth.Toke
 func createRegisterHandler(userRepository user.Repository) *handler.RegisterHandler {
 	return handler.NewRegisterHandler(userRepository,
 		crypto.NewBcryptHasher())
-}
-
-func createMockRepository(userRepository user.Repository) user.Repository {
-	userSlice := createDemoUserSlice()
-	for _, newUser := range userSlice {
-		_, _ = userRepository.Create(newUser)
-	}
-
-	return userRepository
-}
-
-func createDemoUserSlice() []*model.User {
-	bcryptHasher := crypto.NewBcryptHasher()
-	hashedPassword, _ := bcryptHasher.Hash([]byte("12345"))
-
-	return []*model.User{
-		{
-			Id:       1,
-			Email:    "ada.lovelace@gmail.com",
-			Password: hashedPassword,
-			Name:     "Ada Lovelace",
-			Role:     model.Customer,
-		},
-		{
-			Id:       2,
-			Email:    "info-aldi@gmail.com",
-			Password: hashedPassword,
-			Name:     "Aldi",
-			Role:     model.Merchant,
-		},
-		{
-			Id:       3,
-			Email:    "info-edeka@gmail.com",
-			Password: hashedPassword,
-			Name:     "Edeka",
-			Role:     model.Merchant,
-		},
-	}
 }
