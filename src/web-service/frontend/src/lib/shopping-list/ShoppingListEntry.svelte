@@ -35,7 +35,6 @@
             for (const userId of userIds) {
                 const apiUrlUser: string = `/api/v1/user/${userId}`;
                 merchants = merchants.concat(await fetchHelper(apiUrlUser));
-                console.log(merchants)
             }
         }
     });

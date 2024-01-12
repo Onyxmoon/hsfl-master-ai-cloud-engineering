@@ -80,7 +80,14 @@ func createContentForShoppingListEntries(shoppingListEntryRepository userShoppin
 		},
 		{
 			ShoppingListId: 1,
-			ProductId:      2,
+			ProductId:      3,
+			Count:          1,
+			Note:           "",
+			Checked:        false,
+		},
+		{
+			ShoppingListId: 1,
+			ProductId:      100,
 			Count:          1,
 			Note:           "",
 			Checked:        false,
