@@ -1,9 +1,11 @@
-users: 30
+users: 50
 requests:
   - 0
   - 500
+  - 500
 time:
   - 0
-  - 30
+  - 10
+  - 20
 targets:
   - url: http://127.0.0.1:443/
