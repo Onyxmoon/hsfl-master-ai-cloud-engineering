@@ -10,24 +10,19 @@ type Target struct {
 }
 
 type Configuration struct {
-	Users     int       `json:"users"`     // Users to simulate or workers to run concurrently.
-	Requests  int       `json:"requests"`  // Requests amount to send per user.
-	RateLimit int       `json:"rateLimit"` // RateLimit for requests to send per second.
-	Duration  int       `json:"duration"`  // Duration maximum of the test in seconds.
-	RampUp    int       `json:"rampUp"`    // RampUp time for the ramping in seconds.
-	Targets   []*Target `json:"targets"`   // Targets to address randomly
+	Users    int       `json:"users"`    // Users to simulate or workers to run concurrently.
+	Targets  []*Target `json:"targets"`  // Targets to address randomly
+	Time     []int     `json:"time"`     // Timestamps where the RPS should be reached in s starting at 0.
+	Requests []int     `json:"requests"` // Requests amount to send per second.
 }
 
 func GetConfig(path string) (*Configuration, error) {
 	viper.SetConfigFile(path)
 	viper.SetDefault("users", 10)
-	viper.SetDefault("requests", 1000)
-	viper.SetDefault("rateLimit", 50)
-	viper.SetDefault("duration", 100)
-	viper.SetDefault("rampUp", 10)
 	viper.SetDefault("targets", []*Target{
 		{URL: "https://google.de:443"},
 	})
+	viper.WriteConfigAs("configexample")
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -37,6 +32,11 @@ func GetConfig(path string) (*Configuration, error) {
 	configuration := &Configuration{}
 	if err := viper.Unmarshal(configuration); err != nil {
 		return nil, err
+	}
+
+	// Ensure the length of Time and Requests slices are equal
+	if len(configuration.Time) != len(configuration.Requests) {
+		return nil, fmt.Errorf("length of 'time' and 'requests' should be equal")
 	}
 
 	return configuration, nil

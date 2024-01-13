@@ -4,47 +4,48 @@ import (
 	"http-stress-test/config"
 	"http-stress-test/metrics"
 	"http-stress-test/network"
+	"log"
 	"math/rand"
 	"sync"
 	"time"
 )
 
-type tester struct {
+type Tester struct {
 	config  *config.Configuration
 	metrics *metrics.Metrics
 }
 
-func NewTester(config *config.Configuration, metrics *metrics.Metrics) *tester {
-	return &tester{
+func NewTester(config *config.Configuration, metrics *metrics.Metrics) *Tester {
+	return &Tester{
 		config:  config,
 		metrics: metrics,
 	}
 }
 
-func (t *tester) Run() {
+func (t *Tester) Run() {
 	var wg sync.WaitGroup
 
-	rampUpInterval := time.Duration((int64(t.config.RampUp) * time.Second.Nanoseconds()) / int64(t.config.Users))
+	// Calculate RPS slope between points
 
 	for i := 0; i < t.config.Users; i++ {
 		wg.Add(1)
-		go t.runUser(&wg, t.metrics)
 
-		if t.config.RampUp > 0 {
-			time.Sleep(rampUpInterval)
-		}
+		// Calculate interpolated RPS for the current user
+
+		go t.runUser(&wg, t.metrics, 0.5)
 	}
 
 	wg.Wait()
 	time.Sleep(time.Second)
 }
 
-func (t *tester) runUser(wg *sync.WaitGroup, metrics *metrics.Metrics) {
+func (t *Tester) runUser(wg *sync.WaitGroup, metrics *metrics.Metrics, interpolatedRPS float64) {
 	if t.metrics != nil {
 		// Metrics
 		metrics.IncrementUserCount()
 		defer metrics.DecrementUserCount()
 	}
+
 	// Send done to waiting group
 	defer wg.Done()
 
@@ -52,19 +53,26 @@ func (t *tester) runUser(wg *sync.WaitGroup, metrics *metrics.Metrics) {
 
 	// Calculate force ending time
 	var endTime time.Time
-	if t.config.Duration > 0 {
-		endTime = time.Now().Add(time.Duration(t.config.Duration) * time.Second)
+	if t.config.Time[len(t.config.Time)-1] > 0 {
+		endTime = time.Now().Add(time.Duration(t.config.Time[len(t.config.Time)-1]) * time.Second)
 	}
+
+	// Initialize variables for scaling logic
+	//nextPointTime := t.config.Time[0]
+	nextPointRPS := t.config.Requests[0]
+	// Recalculate timeInterval for the new RPS
+	var timeInterval = time.Second
+	if nextPointRPS > 0 {
+		timeInterval = time.Second / time.Duration(nextPointRPS)
+		metrics.SetRPS(float64(nextPointRPS))
+	}
+	timeInterval = 0
+	log.Print(timeInterval)
 
 	requestCount := 0
 	for {
 		// Cancel on max duration
 		if !endTime.IsZero() && time.Now().After(endTime) {
-			break
-		}
-
-		// Cancel on max requests
-		if t.config.Requests > 0 && requestCount >= t.config.Requests {
 			break
 		}
 
@@ -84,10 +92,13 @@ func (t *tester) runUser(wg *sync.WaitGroup, metrics *metrics.Metrics) {
 		}
 
 		// Limiting rate if configured
-		if t.config.RateLimit > 0 {
-			time.Sleep(time.Second / time.Duration(t.config.RateLimit))
+		if interpolatedRPS > 0 {
+			// Adjust the sleep interval to meet the desired RPS
+			sleepInterval := time.Second / time.Duration(interpolatedRPS)
+			time.Sleep(sleepInterval)
 		}
 
 		requestCount++
+
 	}
 }

@@ -1,7 +1,9 @@
-users: 10
-requests: 2500
-duration: 0
-rampUp: 0
-rateLimit: 10000
+users: 30
+requests:
+  - 0
+  - 500
+time:
+  - 0
+  - 30
 targets:
-  - url: https://hs-flensburg.de
+  - url: http://127.0.0.1:443/

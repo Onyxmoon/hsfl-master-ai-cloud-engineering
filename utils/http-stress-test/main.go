@@ -25,7 +25,7 @@ func main() {
 	go m.DisplayMetrics(ctx)
 
 	// Run stress test
-	t := tester.NewTester(cfg, m)
-	t.Run()
+	t := tester.MakeNewNewTester(cfg, m)
+	t.NewRun()
 
 }
