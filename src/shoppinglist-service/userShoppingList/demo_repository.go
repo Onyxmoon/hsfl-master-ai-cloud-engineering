@@ -3,6 +3,7 @@ package userShoppingList
 import (
 	"errors"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/shoppinglist-service/userShoppingList/model"
+	"sort"
 )
 
 type DemoRepository struct {
@@ -31,18 +32,8 @@ func (repo *DemoRepository) Create(shoppingList *model.UserShoppingList) (*model
 	return shoppingList, nil
 }
 
-func (repo *DemoRepository) Delete(shoppingList *model.UserShoppingList) error {
-	_, found := repo.shoppingLists[shoppingList.Id]
-	if found {
-		delete(repo.shoppingLists, shoppingList.Id)
-		return nil
-	}
-
-	return errors.New(ErrorListDeletion)
-}
-
 func (repo *DemoRepository) Update(shoppingList *model.UserShoppingList) (*model.UserShoppingList, error) {
-	existingShoppingList, foundError := repo.findById(shoppingList.Id)
+	existingShoppingList, foundError := repo.FindById(shoppingList.Id)
 
 	if foundError != nil {
 		return nil, errors.New(ErrorListUpdate)
@@ -67,10 +58,14 @@ func (repo *DemoRepository) FindAllById(userId uint64) ([]*model.UserShoppingLis
 		return nil, errors.New(ErrorListNotFound)
 	}
 
+	sort.Slice(lists, func(i, j int) bool {
+		return lists[i].Description < lists[j].Description
+	})
+
 	return lists, nil
 }
 
-func (repo *DemoRepository) findById(Id uint64) (*model.UserShoppingList, error) {
+func (repo *DemoRepository) FindById(Id uint64) (*model.UserShoppingList, error) {
 	shoppingList, found := repo.shoppingLists[Id]
 	if found {
 		return shoppingList, nil
@@ -87,6 +82,16 @@ func (repo *DemoRepository) FindByIds(userId uint64, listId uint64) (*model.User
 	}
 
 	return nil, errors.New(ErrorListNotFound)
+}
+
+func (repo *DemoRepository) Delete(shoppingList *model.UserShoppingList) error {
+	_, found := repo.shoppingLists[shoppingList.Id]
+	if found {
+		delete(repo.shoppingLists, shoppingList.Id)
+		return nil
+	}
+
+	return errors.New(ErrorListDeletion)
 }
 
 func (repo *DemoRepository) findNextAvailableID() uint64 {

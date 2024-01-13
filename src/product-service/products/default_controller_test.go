@@ -53,7 +53,7 @@ func TestDefaultController_DeleteProduct(t *testing.T) {
 		{
 			name: "Successfully delete existing product (expect 200)",
 			fields: fields{
-				productRepository: setupMockRepository(),
+				productRepository: GenerateExampleDemoRepository(),
 			},
 			args: args{
 				writer: httptest.NewRecorder(),
@@ -68,7 +68,7 @@ func TestDefaultController_DeleteProduct(t *testing.T) {
 		{
 			name: "Bad non-numeric request (expect 400)",
 			fields: fields{
-				productRepository: setupMockRepository(),
+				productRepository: GenerateExampleDemoRepository(),
 			},
 			args: args{
 				writer: httptest.NewRecorder(),
@@ -83,7 +83,7 @@ func TestDefaultController_DeleteProduct(t *testing.T) {
 		{
 			name: "Unknown product to delete (expect 500)",
 			fields: fields{
-				productRepository: setupMockRepository(),
+				productRepository: GenerateExampleDemoRepository(),
 			},
 			args: args{
 				writer: httptest.NewRecorder(),
@@ -126,7 +126,7 @@ func TestDefaultController_GetProductById(t *testing.T) {
 		{
 			name: "Bad non-numeric request (expect 400)",
 			fields: fields{
-				productRepository: setupMockRepository(),
+				productRepository: GenerateExampleDemoRepository(),
 			},
 			args: args{
 				writer: httptest.NewRecorder(),
@@ -141,7 +141,7 @@ func TestDefaultController_GetProductById(t *testing.T) {
 		{
 			name: "Unknown product (expect 404)",
 			fields: fields{
-				productRepository: setupMockRepository(),
+				productRepository: GenerateExampleDemoRepository(),
 			},
 			args: args{
 				writer: httptest.NewRecorder(),
@@ -172,7 +172,7 @@ func TestDefaultController_GetProductById(t *testing.T) {
 		request = request.WithContext(context.WithValue(request.Context(), "productId", "1"))
 
 		controller := defaultController{
-			productRepository: setupMockRepository(),
+			productRepository: GenerateExampleDemoRepository(),
 		}
 
 		// when
@@ -203,34 +203,17 @@ func TestDefaultController_GetProductById(t *testing.T) {
 			t.Errorf("Expected description of product %s, got %s", "Strauchtomaten", response.Description)
 		}
 
-		if response.Ean != 4014819040771 {
-			t.Errorf("Expected ean of product %d, got %d", 4014819040771, response.Ean)
+		if response.Ean != "4014819040771" {
+			t.Errorf("Expected ean of product %s, got %s", "4014819040771", response.Ean)
 		}
 
 	})
 }
 
 func TestDefaultController_GetProductByEan(t *testing.T) {
-	t.Run("Bad non-numeric request (expect 400)", func(t *testing.T) {
-		controller := defaultController{
-			productRepository: setupMockRepository(),
-		}
-
-		writer := httptest.NewRecorder()
-		request := httptest.NewRequest("GET", "/api/v1/products/ean?ean=abc", nil)
-		request = request.WithContext(context.WithValue(request.Context(), "productEan", "abc"))
-
-		// Test request
-		controller.GetProductByEan(writer, request)
-
-		if writer.Code != http.StatusBadRequest {
-			t.Errorf("Expected status code %d, got %d", http.StatusBadRequest, writer.Code)
-		}
-	})
-
 	t.Run("Unknown product (expect 404)", func(t *testing.T) {
 		controller := defaultController{
-			productRepository: setupMockRepository(),
+			productRepository: GenerateExampleDemoRepository(),
 		}
 
 		writer := httptest.NewRecorder()
@@ -247,7 +230,7 @@ func TestDefaultController_GetProductByEan(t *testing.T) {
 
 	t.Run("Should return products by EAN", func(t *testing.T) {
 		controller := defaultController{
-			productRepository: setupMockRepository(),
+			productRepository: GenerateExampleDemoRepository(),
 		}
 
 		writer := httptest.NewRecorder()
@@ -279,7 +262,7 @@ func TestDefaultController_GetProductByEan(t *testing.T) {
 func TestDefaultController_GetProducts(t *testing.T) {
 	t.Run("should return all products", func(t *testing.T) {
 		controller := defaultController{
-			productRepository: setupMockRepository(),
+			productRepository: GenerateExampleDemoRepository(),
 		}
 
 		writer := httptest.NewRecorder()
@@ -305,7 +288,7 @@ func TestDefaultController_GetProducts(t *testing.T) {
 				"application/json", writer.Header().Get("Content-Type"))
 		}
 
-		products := setupDemoProductSlice()
+		products := GenerateExampleProductSlice()
 
 		sort.Slice(response, func(i, j int) bool {
 			return response[i].Id < response[j].Id
@@ -326,7 +309,7 @@ func TestDefaultController_GetProducts(t *testing.T) {
 			}
 
 			if product.Ean != response[i].Ean {
-				t.Errorf("Expected ean of product %d, got %d", product.Ean, response[i].Ean)
+				t.Errorf("Expected ean of product %s, got %s", product.Ean, response[i].Ean)
 			}
 		}
 
@@ -351,14 +334,14 @@ func TestDefaultController_PostProduct(t *testing.T) {
 		{
 			name: "Valid Product",
 			fields: fields{
-				productRepository: setupMockRepository(),
+				productRepository: GenerateExampleDemoRepository(),
 			},
 			args: args{
 				writer: httptest.NewRecorder(),
 				request: httptest.NewRequest(
 					"POST",
 					"/api/v1/product",
-					strings.NewReader(`{"id": 3, "description": "Test Product", "ean": 12345}`),
+					strings.NewReader(`{"id": 3, "description": "Test Product", "ean": "12345"}`),
 				),
 			},
 			expectedStatus:   http.StatusOK,
@@ -367,7 +350,7 @@ func TestDefaultController_PostProduct(t *testing.T) {
 		{
 			name: "Valid Product (Partly Fields)",
 			fields: fields{
-				productRepository: setupMockRepository(),
+				productRepository: GenerateExampleDemoRepository(),
 			},
 			args: args{
 				writer: httptest.NewRecorder(),
@@ -383,7 +366,7 @@ func TestDefaultController_PostProduct(t *testing.T) {
 		{
 			name: "Malformed JSON",
 			fields: fields{
-				productRepository: setupMockRepository(),
+				productRepository: GenerateExampleDemoRepository(),
 			},
 			args: args{
 				writer: httptest.NewRecorder(),
@@ -391,22 +374,6 @@ func TestDefaultController_PostProduct(t *testing.T) {
 					"POST",
 					"/api/v1/product",
 					strings.NewReader(`{"description": "Incomplete Product"`),
-				),
-			},
-			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: "",
-		},
-		{
-			name: "Invalid product, incorrect Type for EAN (Non-numeric)",
-			fields: fields{
-				productRepository: setupMockRepository(),
-			},
-			args: args{
-				writer: httptest.NewRecorder(),
-				request: httptest.NewRequest(
-					"POST",
-					"/api/v1/product",
-					strings.NewReader(`{"id": 3, "description": "Invalid EAN", "ean": "abc"}`),
 				),
 			},
 			expectedStatus:   http.StatusBadRequest,
@@ -455,7 +422,7 @@ func TestDefaultController_PutProduct(t *testing.T) {
 		{
 			name: "Valid Update",
 			fields: fields{
-				productRepository: setupMockRepository(),
+				productRepository: GenerateExampleDemoRepository(),
 			},
 			args: args{
 				writer: httptest.NewRecorder(),
@@ -463,7 +430,7 @@ func TestDefaultController_PutProduct(t *testing.T) {
 					var request = httptest.NewRequest(
 						"PUT",
 						"/api/v1/product/1",
-						strings.NewReader(`{"id": 1, "description": "Updated Product", "ean": 54321}`))
+						strings.NewReader(`{"id": 1, "description": "Updated Product", "ean": "54321"}`))
 					request = request.WithContext(context.WithValue(request.Context(), "productId", "1"))
 					return request
 				}(),
@@ -474,7 +441,7 @@ func TestDefaultController_PutProduct(t *testing.T) {
 		{
 			name: "Valid Update (Partly Fields)",
 			fields: fields{
-				productRepository: setupMockRepository(),
+				productRepository: GenerateExampleDemoRepository(),
 			},
 			args: args{
 				writer: httptest.NewRecorder(),
@@ -493,7 +460,7 @@ func TestDefaultController_PutProduct(t *testing.T) {
 		{
 			name: "Malformed JSON",
 			fields: fields{
-				productRepository: setupMockRepository(),
+				productRepository: GenerateExampleDemoRepository(),
 			},
 			args: args{
 				writer: httptest.NewRecorder(),
@@ -549,30 +516,5 @@ func TestDefaultController_PutProduct(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-
-func setupMockRepository() Repository {
-	repository := NewDemoRepository()
-	productSlice := setupDemoProductSlice()
-	for _, product := range productSlice {
-		repository.Create(product)
-	}
-
-	return repository
-}
-
-func setupDemoProductSlice() []*model.Product {
-	return []*model.Product{
-		{
-			Id:          1,
-			Description: "Strauchtomaten",
-			Ean:         4014819040771,
-		},
-		{
-			Id:          2,
-			Description: "Lauchzwiebeln",
-			Ean:         5001819040871,
-		},
 	}
 }

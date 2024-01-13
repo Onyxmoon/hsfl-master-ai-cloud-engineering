@@ -1,24 +1,29 @@
 <script lang="ts">
-    import {page} from "$app/stores";
+    import { page } from "$app/stores";
+    import { handleErrors } from "../../../assets/helper/handleErrors";
     import Placeholder from "../../../assets/svg/Placeholder.svelte";
     import SubmitButton from "$lib/forms/SubmitButton.svelte";
-    import {handleErrors} from "../../../assets/helper/handleErrors";
     import Badge from "$lib/general/Badge.svelte";
     import CloseButton from "$lib/general/CloseButton.svelte";
     import BackLink from "$lib/general/BackLink.svelte";
-    import InputText from "$lib/forms/InputText.svelte";
+    import Input from "$lib/forms/Input.svelte";
 
     let listHeadline: string = '';
     let formSubmitted: boolean = false;
 
     function submit(): void {
-        if ( listHeadline === '') return;
+        const userId: string | null = sessionStorage.getItem('user_id');
+        const token: string | null = sessionStorage.getItem('access_token');
 
-        const userId: number = 2; // TODO: dynamic user id of current logged in user
+        if (! userId || ! token || listHeadline === '') return;
+
         const apiUrl: string = `/api/v1/shoppinglist/${userId}`
         const requestOptions = {
             method: "POST",
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
             body: `{"description": "${listHeadline}"}`,
         };
 
@@ -48,8 +53,9 @@
                 <figure class="bg-green-light/25 rounded-full w-14 h-14 flex items-center justify-center lg:w-16 lg:h-16">
                     <Placeholder classes="w-6 h-6 text-green-dark"/>
                 </figure>
-                <InputText
+                <Input
                     fieldName="listName"
+                    type="text"
                     label="Name der Einkaufsliste"
                     bind:value={listHeadline} />
             </section>

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {page} from "$app/stores";
+    import { page } from "$app/stores";
     import Header from "$lib/general/Header.svelte";
 
     interface Merchant {
@@ -18,7 +18,8 @@
     export let data: Data;
 </script>
 
-<Header headline="{$page.data.headline}"/>
+<Header
+    headline="{$page.data.headline}"/>
 
 <main>
     <ul class="px-5 mt-4 grid grid-cols-1 gap-y-4 lg:gap-y-6 lg:mt-6">

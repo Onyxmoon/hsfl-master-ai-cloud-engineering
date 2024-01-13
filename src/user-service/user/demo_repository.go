@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"sort"
 
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/user/model"
 )
@@ -18,14 +19,19 @@ func (repo *DemoRepository) Create(user *model.User) (*model.User, error) {
 	var userId uint64
 	if user.Id == 0 {
 		userId = repo.findNextAvailableID()
+		user.Id = userId
 	} else {
 		userId = user.Id
 	}
 
 	_, found := repo.users[userId]
-	if found {
+	foundUser, err := repo.FindByEmail(user.Email)
+	if found || foundUser != nil {
 		return nil, errors.New(ErrorUserAlreadyExists)
+	} else if err != nil && err.Error() != ErrorUserNotFound {
+		return nil, err
 	}
+
 	repo.users[userId] = user
 
 	return user, nil
@@ -47,20 +53,28 @@ func (repo *DemoRepository) FindAll() ([]*model.User, error) {
 		for _, v := range repo.users {
 			r = append(r, v)
 		}
+
+		sort.Slice(r, func(i, j int) bool {
+			return r[i].Name < r[j].Name
+		})
 		return r, nil
 	}
 
 	return nil, errors.New(ErrorUserList)
 }
 
-func (repo *DemoRepository) FindAllByRole(role *model.Role) ([]*model.User, error) {
+func (repo *DemoRepository) FindAllByRole(role model.Role) ([]*model.User, error) {
 	if repo.users != nil {
-		r := make([]*model.User, 0, len(repo.users))
+		r := make([]*model.User, 0)
 		for _, user := range repo.users {
-			if user.Role == *role {
+			if user.Role == role {
 				r = append(r, user)
 			}
 		}
+
+		sort.Slice(r, func(i, j int) bool {
+			return r[i].Name < r[j].Name
+		})
 		return r, nil
 	}
 

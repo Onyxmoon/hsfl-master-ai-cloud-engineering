@@ -1,12 +1,12 @@
 <script lang="ts">
-    import {page} from "$app/stores";
+    import { page } from "$app/stores";
+    import { handleErrors } from "../../../assets/helper/handleErrors";
     import Badge from "$lib/general/Badge.svelte";
     import CloseButton from "$lib/general/CloseButton.svelte";
     import BackLink from "$lib/general/BackLink.svelte";
     import FindProduct from "$lib/products/FindProduct.svelte";
     import SubmitButton from "$lib/forms/SubmitButton.svelte";
-    import InputText from "$lib/forms/InputText.svelte";
-    import {handleErrors} from "../../../assets/helper/handleErrors";
+    import Input from "$lib/forms/Input.svelte";
 
     interface Product {
         id: number,
@@ -22,8 +22,6 @@
 
     let formSubmitted: boolean = false;
 
-    $: productPrice = priceData ? priceData.price : null;
-
     function submit(): void {
         if (! productPrice || ! productData) return;
         priceIsAlreadyCreated ? updatePrice() : fetchContent("POST");
@@ -35,12 +33,18 @@
     }
 
     function fetchContent(method: string): void {
-        const userId: number = 2; // TODO: add current user id
+        const userId: string | null = sessionStorage.getItem('user_id');
+        const token: string | null = sessionStorage.getItem('access_token');
+
+        if (! token || ! userId) return;
         const apiUrl: string = `/api/v1/price/${productData.id}/${userId}`
 
         const requestOptions = {
             method: method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
             body: `{"price": ${productPrice}}`,
         };
 
@@ -78,7 +82,7 @@
 
             {#if productData}
                 <section>
-                    <InputText
+                    <Input
                         fieldName="productPrice"
                         label="Preis des Produktes"
                         type="number"

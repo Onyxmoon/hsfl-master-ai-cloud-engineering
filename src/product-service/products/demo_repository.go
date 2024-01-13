@@ -3,6 +3,7 @@ package products
 import (
 	"errors"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/product-service/products/model"
+	"sort"
 )
 
 type DemoRepository struct {
@@ -31,22 +32,16 @@ func (repo *DemoRepository) Create(product *model.Product) (*model.Product, erro
 	return product, nil
 }
 
-func (repo *DemoRepository) Delete(product *model.Product) error {
-	_, found := repo.products[product.Id]
-	if found {
-		delete(repo.products, product.Id)
-		return nil
-	}
-
-	return errors.New(ErrorProductDeletion)
-}
-
 func (repo *DemoRepository) FindAll() ([]*model.Product, error) {
 	if repo.products != nil {
 		r := make([]*model.Product, 0, len(repo.products))
 		for _, v := range repo.products {
 			r = append(r, v)
 		}
+
+		sort.Slice(r, func(i, j int) bool {
+			return r[i].Description < r[j].Description
+		})
 		return r, nil
 	}
 
@@ -62,7 +57,7 @@ func (repo *DemoRepository) FindById(id uint64) (*model.Product, error) {
 	return nil, errors.New(ErrorProductNotFound)
 }
 
-func (repo *DemoRepository) FindByEan(ean uint64) (*model.Product, error) {
+func (repo *DemoRepository) FindByEan(ean string) (*model.Product, error) {
 	for _, entry := range repo.products {
 		if entry.Ean == ean {
 			return entry, nil
@@ -83,6 +78,16 @@ func (repo *DemoRepository) Update(product *model.Product) (*model.Product, erro
 	existingProduct.Ean = product.Ean
 
 	return existingProduct, nil
+}
+
+func (repo *DemoRepository) Delete(product *model.Product) error {
+	_, found := repo.products[product.Id]
+	if found {
+		delete(repo.products, product.Id)
+		return nil
+	}
+
+	return errors.New(ErrorProductDeletion)
 }
 
 func (repo *DemoRepository) findNextAvailableID() uint64 {

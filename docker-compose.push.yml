@@ -17,7 +17,6 @@ services:
       dockerfile: ./src/web-service/Dockerfile
     image: onyxmoon/pw-web-service:${RELEASE_VERSION:-latest}
 
-
   products:
     build:
       context: ./
@@ -35,3 +34,9 @@ services:
       context: ./
       dockerfile: ./src/shoppinglist-service/Dockerfile
     image: onyxmoon/pw-shoppinglist-service:${RELEASE_VERSION:-latest}
+
+  database-rqlite-test-data-init:
+    build:
+      context: ./utils/rqlite-db-init-test/
+      dockerfile: Dockerfile
+    image: onyxmoon/pw-database-rqlite-test-data-init:${RELEASE_VERSION:-latest}

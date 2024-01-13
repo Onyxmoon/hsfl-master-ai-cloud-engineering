@@ -1,23 +1,57 @@
 import { handleErrors } from '../../../assets/helper/handleErrors';
+import { sortProducts } from "../../../assets/helper/sortProducts";
+import { checkAuthentication } from "../../../assets/helper/checkAuthentication";
 
-// Loads shopping list data and entries for a given shopping list id.
-export const load = async (context: { params: { id: string } }): Promise<object> => {
+interface List {
+    id: number,
+    description: string,
+    completed?: boolean,
+}
+
+interface Entry {
+    productId: number,
+    count: number,
+    checked?: boolean
+}
+
+interface Product {
+    id: number,
+    description: string,
+    ean: number,
+}
+
+export const load = async (context: { params: { id: string } }): Promise<Promise<object>> => {
+    await checkAuthentication();
+
     const { id } = context.params;
-    const apiUrlList: string = `/api/v1/shoppinglist/${id}/2`;
+    const token: string | null = sessionStorage.getItem('access_token');
+    const userId: string | null = sessionStorage.getItem('user_id');
+
+    if (! token || ! id || ! userId) return data;
+
+    const apiUrlList: string = `/api/v1/shoppinglist/${id}/${userId}`;
     const apiUrlEntries: string = `/api/v1/shoppinglistentries/${id}`;
+    const requestOptions: object = { headers: { 'Authorization': `Bearer ${token}` }};
 
-    const [list, entries] = await Promise.all([
-        fetch(apiUrlList).then(handleErrors),
-        fetch(apiUrlEntries).then(handleErrors),
-    ]);
+    try {
+        const [list, entries] = await Promise.all([
+            fetch(apiUrlList, requestOptions).then(handleErrors) as Promise<List>,
+            fetch(apiUrlEntries, requestOptions).then(handleErrors) as Promise<Entry[]>,
+        ]);
 
-    if (entries === null || list === null) {
-        console.warn('Entries or Shoppinglist not found');
+        let sortedProducts: Product[] = await sortProducts(entries);
+        return data(list, entries ?? [], sortedProducts);
+
+    } catch (error) {
+        return data;
     }
+};
 
+const data = (list: any = [], entries: object[] = [], products: object[] = []): object => {
     return {
-        list: list ?? [],
-        entries: entries ?? [],
+        list: list,
+        entries: entries,
+        products: products,
         metaTitle: 'Liste: ' + list?.description,
     };
 };

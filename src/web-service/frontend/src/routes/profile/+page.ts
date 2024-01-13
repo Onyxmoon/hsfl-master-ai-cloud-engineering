@@ -1,24 +1,16 @@
-import {handleErrors} from "../../assets/helper/handleErrors";
+import type { PageLoad } from './$types';
+import { fetchHelper } from "../../assets/helper/fetchHelper";
+import { checkAuthentication } from "../../assets/helper/checkAuthentication";
 
-export const load = async (): Promise<object> => {
-    const userId: number = 2; // TODO: add real current user id
-    const apiUrl: string = `/api/v1/user/${userId}`;
+export const load: PageLoad = async () : Promise<object> => {
+    await checkAuthentication();
 
-    return fetch(apiUrl)
-        .then(handleErrors)
-        .then(user => {
-            return {
-                user: user ?? [],
-                metaTitle: 'Deine Profil-Einstellungen',
-                headline: 'Dein Profil',
-            };
-        })
-        .catch(error => {
-            console.error("Failed to fetch user data:", error.message);
-            return {
-                user: [],
-                metaTitle: 'Deine Profil-Einstellungen',
-                headline: 'Dein Profil',
-            };
-        });
+    const apiUrl: string = `/api/v1/user/${sessionStorage.getItem('user_id')}`;
+    const user: object[] = await fetchHelper(apiUrl);
+
+    return {
+        user: user ?? [],
+        metaTitle: 'Dein Profil',
+        headline: 'Dein Profil',
+    };
 };

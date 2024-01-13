@@ -1,12 +1,12 @@
 <script lang="ts">
-    import {page} from "$app/stores";
+    import { page } from "$app/stores";
+    import { handleErrors } from "../../../assets/helper/handleErrors";
     import Badge from "$lib/general/Badge.svelte";
     import CloseButton from "$lib/general/CloseButton.svelte";
     import BackLink from "$lib/general/BackLink.svelte";
     import FindProduct from "$lib/products/FindProduct.svelte";
     import SubmitButton from "$lib/forms/SubmitButton.svelte";
-    import InputText from "$lib/forms/InputText.svelte";
-    import {handleErrors} from "../../../assets/helper/handleErrors";
+    import Input from "$lib/forms/Input.svelte";
 
     interface Product {
         id: number,
@@ -21,8 +21,6 @@
     let formSubmitted: boolean = false;
     let eanSubmitted: boolean = false;
 
-    $: productDescription = productData ? productData.description : '';
-
     function submit(): void {
         if (! productDescription) return;
         productData ? updateProduct() : createProduct();
@@ -30,7 +28,7 @@
 
     function updateProduct(): void {
         if (! productData.id) return;
-        const apiUrl: string = `/api/v1/product/${productData.id}`
+        const apiUrl: string = `/api/v1/product/${productData.id}`;
         fetchContent(apiUrl, "PUT");
     }
 
@@ -40,10 +38,13 @@
     }
 
     function fetchContent(apiUrl: string, method: string): void {
+        const token: string | null = sessionStorage.getItem('access_token');
+        if (! token) return;
+
         const requestOptions = {
             method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: `{"description": "${productDescription}", "ean": ${productEan}}`,
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: `{"description": "${productDescription}", "ean": "${productEan}"}`,
         };
 
         fetch(apiUrl, requestOptions)
@@ -78,8 +79,9 @@
 
             {#if eanSubmitted}
                 <section>
-                    <InputText
+                    <Input
                         fieldName="productName"
+                        type="text"
                         label="Name des Produktes"
                         bind:value={productDescription} />
 

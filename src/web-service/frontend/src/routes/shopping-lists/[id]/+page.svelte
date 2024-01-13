@@ -1,14 +1,22 @@
 <script lang="ts">
+    import { onMount } from "svelte";
+    import { handleErrors } from "../../../assets/helper/handleErrors";
     import ShoppingListEntry from "$lib/shopping-list/ShoppingListEntry.svelte";
     import AddEntryModal from "$lib/shopping-list/AddEntryModal.svelte";
     import ViewSelect from "$lib/shopping-list/ViewSelect.svelte";
-    import {onMount} from "svelte";
-    import {handleErrors} from "../../../assets/helper/handleErrors";
     import BackLink from "$lib/general/BackLink.svelte";
+    import CheapestMerchantNotice from "$lib/shopping-list/CheapestMerchantNotice.svelte";
+
+    interface Entry {
+        productId: number,
+        count: number,
+        checked?: boolean,
+    }
 
     interface Data {
         list: { id: number, description: string, completed?: boolean },
-        entries: { productId: number, count: number, checked?: boolean }[],
+        entries: Entry[],
+        products: { id: number, description: string, ean: number }[],
     }
 
     type ViewState = "detailed" | "compressed";
@@ -23,6 +31,11 @@
                 checkedEntriesCount++;
             }
         })
+
+        if (data.entries.length > 0 && data.list.completed && checkedEntriesCount != data.entries.length) {
+            data.list.completed = false;
+            updateShoppingList();
+        }
     });
 
     function updateCheckedEntriesCount(event: any): void {
@@ -40,20 +53,28 @@
     }
 
     function updateShoppingList(): void {
-        const userId = 2; // TODO: add real user id
+        const token: string | null = sessionStorage.getItem('access_token');
+        const userId: string | null  = sessionStorage.getItem('user_id');
 
-        if (! data.list.id || ! userId) return;
+        if (! data.list.id || ! userId || ! token) return;
 
         const apiUrl = `/api/v1/shoppinglist/${data.list.id}/${userId}`;
         const requestOptions = {
             method: "PUT",
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
             body: `{ "description": "${data.list.description}", "checked": ${data.list.completed} }`,
         };
 
         fetch(apiUrl, requestOptions)
             .then(handleErrors)
             .catch(error => console.error("Failed to fetch data:", error.message));
+    }
+
+    function findEntryByProductId(productId: number): Entry | undefined {
+        return data.entries.find(entry => entry.productId === productId);
     }
 </script>
 
@@ -74,28 +95,37 @@
                     {data.list.description}
                 </h1>
                 <p class="text-gray-dark text-sm mt-1">
-                    Anzahl der Einträge: {data.entries.length}
+                    Anzahl der Einträge: {data.products.length}
                 </p>
             </div>
         </section>
 
-        <ViewSelect bind:view={view}/>
+        <CheapestMerchantNotice
+            showNotice={data.products.length > 0} />
+
+        <ViewSelect
+            bind:view={view} />
 
         <p class="text-gray-dark text-sm">Deine Einkaufsliste</p>
         <ul class="mt-4">
-            {#each data.entries as entry}
-                <ShoppingListEntry
-                    listId={data.list.id}
-                    view={view}
-                    entry={entry}
-                    on:updateCheckedEntriesCount={updateCheckedEntriesCount}/>
+            {#if data.products.length === 0}
+                <p>Keine Einträge vorhanden.</p>
+            {/if}
+
+            {#each data.products as product}
+                {#if findEntryByProductId(product.id)}
+                    <ShoppingListEntry
+                        listId={data.list.id}
+                        view={view}
+                        entry={findEntryByProductId(product.id)}
+                        product={product}
+                        on:updateCheckedEntriesCount={updateCheckedEntriesCount} />
+                {/if}
             {/each}
         </ul>
 
-        {#if ! data.list.completed}
-            <AddEntryModal
-                listId="{data.list.id}"
-                currentEntries="{data.entries}"/>
-        {/if}
+        <AddEntryModal
+            listId="{data.list.id}"
+            currentEntries="{data.entries}"/>
     </div>
 </main>

@@ -1,31 +1,19 @@
 <script lang="ts">
-    import {onMount} from "svelte";
     import {handleErrors} from "../../assets/helper/handleErrors";
     import Trash from "../../assets/svg/Trash.svelte";
 
-    interface Product {
-        id: number,
-        description: string,
-        ean: number,
-    }
-
-    export let price: { userId: number, productId: number, price: number };
-    let product: Product = { id: 0, description: '', ean: 0 };
-
-    const apiUrl = `/api/v1/product/${price.productId}`;
-
-    onMount(async () => {
-        fetch(apiUrl)
-            .then(handleErrors)
-            .then(data => product = data)
-            .catch(error => console.error("Failed to fetch data:", error.message));
-    });
+    export let price: { userId: number, productId: number, price: number } | undefined;
+    export let product: { id: number, description: string, ean: number };
 
     function deletePrice() : void {
+        const token: string | null = sessionStorage.getItem('access_token');
+
+        if (! price || ! token) return;
+
         const apiUrl: string = `/api/v1/price/${price.productId}/${price.userId}`
         const requestOptions = {
             method: "DELETE",
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Authorization': `Bearer ${token}` },
         };
 
         fetch(apiUrl, requestOptions)
@@ -42,7 +30,9 @@
                 {product.description}
             </h3>
             <p class="text-sm mt-1">EAN: <span class="text-gray-dark">{product.ean}</span></p>
-            <p class="text-sm mt-1">Preis: <span class="text-gray-dark">{price.price}</span></p>
+            {#if price}
+                <p class="text-sm mt-1">Preis: <span class="text-gray-dark">{price.price} Є</span></p>
+            {/if}
         </div>
 
         <button
