@@ -25,14 +25,14 @@ func (c *TCPClient) Send(targetURL string) {
 
 	conn, err := net.Dial("tcp", target)
 	if err != nil {
-		fmt.Printf("Error connecting to %s: %v\n", target, err)
+		//fmt.Printf("Error connecting to %s: %v\n", target, err)
 		return
 	}
 	request := fmt.Sprintf("GET %s HTTP/1.1\r\nHost: %s\r\n\r\n", path, target)
 
 	_, err = conn.Write([]byte(request))
 	if err != nil {
-		fmt.Printf("Error sending request to %s: %v\n", target, err)
+		//fmt.Printf("Error sending request to %s: %v\n", target, err)
 		return
 	}
 }

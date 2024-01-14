@@ -5,7 +5,6 @@ import (
 	"http-stress-test/metrics"
 	"http-stress-test/network"
 	"math/rand"
-	"os"
 	"sync"
 	"time"
 )
@@ -99,7 +98,7 @@ func (t *Tester) NewRunUser(wg *sync.WaitGroup, metrics *metrics.Metrics, timePo
 	requestCount := 0
 	for {
 		if !endTime.IsZero() && time.Now().After(endTime) {
-			os.Exit(0)
+			break
 		}
 
 		RPS := calculateCurrentRPS(startTime, timePoints, requestPoints)

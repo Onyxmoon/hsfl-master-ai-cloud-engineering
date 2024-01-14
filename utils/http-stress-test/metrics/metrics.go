@@ -24,6 +24,8 @@ func NewMetrics() *Metrics {
 }
 
 func (m *Metrics) SetRPS(rps float64) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	m.RequestsPerSecond = rps
 }
 
