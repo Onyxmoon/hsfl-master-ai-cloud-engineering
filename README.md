@@ -25,13 +25,30 @@ Key features:
 
 ![Architecture](README.assets/CE_Architecture_Prototype.svg)
 
-## Requirements
-### Development
+## Setup project in Kubernetes
+The complete application can be deployed within a kubernetes cluster. 
+1. Manifest files for deployment (including monitoring) are located at [`kubernetes/manifests`](kubernetes/manifests)
+2. It is optional but highly recommended to set your own username and password for the database access in manifest files (replace `db-username` and `db-pw-changeMe!` in each service manifest).
+   > Some special characters are not possible because RQLite uses basic auth. Please use url-safe characters like Alphanumeric [0-9a-zA-Z], special characters $-_.+!*'(),.
+3. The user service ([`price-whisper/user.yaml`](kubernetes/manifests/price-whisper/users.yaml)) uses JWT tokens for authentication while logged-in. A custom ECDSA private key can be specified as path or inline in environment variable `JWT_PRIVATE_KEY`.
 
+   Generate a key with the following command:
+   ```shell
+   ssh-keygen -t ecdsa -f ./src/user-service/privateKey.pem -m pem
+   ```
+   > When step is missing, container will use a random but secure generated key on each start, but users will be logged-out at restarts.
+4. Apply the manifests in `kubernetes/manifests` to your kubernetes control plane.
+   ```shell
+   kubectl apply -R -f ./kubernetes/manifests
+   ```
 
-## Setup the project
+## Setup project in Docker
+### Requirements
+- Docker Compose version v2.23.3
+- a compatible container daemon
+
 ### Development setup via docker-compose
-> The development setup exposes all ports to the host machine, so you can access each service individually. Docker will build local and database is not persistent in this setup.
+> The development setup exposes all ports to the host machine, so you can access each service individually. Docker will build locally and the database is not persistent in this setup.
 1. Clone repository from Github `git clone https://github.com/Onyxmoon/hsfl-master-ai-cloud-engineering.git`
 2. Set your own username and password for the database access in compose file (replace `db-username` and `db-pw-changeMe!`).
    > Some special characters are not possible because RQLite uses basic auth. Please use url-safe characters like Alphanumeric [0-9a-zA-Z], special characters $-_.+!*'(),.
@@ -65,14 +82,23 @@ Key features:
    ```
    > When step is missing, container will use a random but secure generated key on each start.
 4. Run `docker compose -f docker-compose.yml up -d` to start the containers defined in the Compose file
-5. Run `docker compopse down` to stop container, networks, volumes, and images created by up.
+5. Run `docker compose down` to stop container, networks, volumes, and images created by up.
 
-### Setup with kubernetes
-1. SECRETS
-1. Apply the manifests in `kubernetes/manifests`
-   ```shell
-   kubectl apply -R -f ./kubernetes/manifests
-   ```
+## Testing
+To run all tests, you can use the following command in the root directory:
+```shell
+go test -v hsfl.de/group6/hsfl-master-ai-cloud-engineering/...
+```
+
+### Integration tests
+If you want to include integrations tests in your test flow use the following command:
+```shell
+go test -v hsfl.de/group6/hsfl-master-ai-cloud-engineering/... --tags=integration
+```
+> Please note, that a with [Testcontainers](https://testcontainers.com/) compatible container daemon is needed. 
+> - Docker Desktop 
+> - Docker Engine on Linux 
+> - Testcontainers Cloud
 
 ## Authors
 
