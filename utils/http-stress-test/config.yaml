@@ -1,12 +1,10 @@
-users: 50
-requests:
-  - 0
-  - 500
-  - 500
-time:
-  - 0
-  - 10
-  - 20
+phases:
+    - targetrps: 0
+      timeidx: 0
+    - targetrps: 500
+      timeidx: 10
+    - targetrps: 500
+      timeidx: 20
 targets:
-  - url: http://127.0.0.1:443/
-  
+    - url: https://google.de:443
+users: 10

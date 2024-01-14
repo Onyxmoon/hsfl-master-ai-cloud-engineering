@@ -5,6 +5,7 @@ import (
 	"http-stress-test/metrics"
 	"http-stress-test/network"
 	"math/rand"
+	"os"
 	"sync"
 	"time"
 )
@@ -28,10 +29,18 @@ func (t *Tester) NewRun() {
 	var startTime time.Time
 	startTime = time.Now()
 
+	times := make([]int, len(t.config.Phases))
+	requests := make([]int, len(t.config.Phases))
+
+	for i, phase := range t.config.Phases {
+		times[i] = phase.TimeIdx
+		requests[i] = phase.TargetRps
+	}
+
 	for i := 0; i < t.config.Users; i++ {
 		wg.Add(1)
 
-		go t.NewRunUser(&wg, t.metrics, t.config.Time, t.config.Requests, t.config.Users, startTime, t.waitForResponse)
+		go t.NewRunUser(&wg, t.metrics, times, requests, startTime)
 	}
 
 	wg.Wait()
@@ -74,7 +83,7 @@ func calculateCurrentRPS(startTime time.Time, timePoints []int, requestPoints []
 	return 0
 }
 
-func (t *Tester) NewRunUser(wg *sync.WaitGroup, metrics *metrics.Metrics, timePoints []int, requestPoints []int, users int, startTime time.Time, waitForResponse bool) {
+func (t *Tester) NewRunUser(wg *sync.WaitGroup, metrics *metrics.Metrics, timePoints []int, requestPoints []int, startTime time.Time) {
 	if t.metrics != nil {
 		metrics.IncrementUserCount()
 		defer metrics.DecrementUserCount()
@@ -83,14 +92,14 @@ func (t *Tester) NewRunUser(wg *sync.WaitGroup, metrics *metrics.Metrics, timePo
 	defer wg.Done()
 
 	var endTime time.Time
-	if t.config.Time[len(t.config.Time)-1] > 0 {
-		endTime = time.Now().Add(time.Duration(t.config.Time[len(t.config.Time)-1]) * time.Second)
+	if timePoints[len(timePoints)-1] > 0 {
+		endTime = startTime.Add(time.Duration(timePoints[len(timePoints)-1]) * time.Second)
 	}
 
 	requestCount := 0
 	for {
 		if !endTime.IsZero() && time.Now().After(endTime) {
-			break
+			os.Exit(0)
 		}
 
 		RPS := calculateCurrentRPS(startTime, timePoints, requestPoints)
@@ -100,7 +109,7 @@ func (t *Tester) NewRunUser(wg *sync.WaitGroup, metrics *metrics.Metrics, timePo
 		targetURL := t.config.Targets[targetIndex].URL
 
 		startTime := time.Now()
-		if waitForResponse {
+		if t.waitForResponse {
 			client := network.NewHttpClient()
 			response, err := client.SendRequest(targetURL)
 			requestCount++
@@ -121,7 +130,7 @@ func (t *Tester) NewRunUser(wg *sync.WaitGroup, metrics *metrics.Metrics, timePo
 			}
 		}
 
-		RPS = RPS / float64(users)
+		RPS = RPS / float64(t.config.Users)
 
 		if RPS > 1 {
 			sleepInterval := 1.0 / RPS

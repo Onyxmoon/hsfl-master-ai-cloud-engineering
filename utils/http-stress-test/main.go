@@ -22,7 +22,7 @@ func main() {
 	m := metrics.NewMetrics()
 	go m.DisplayMetrics(ctx)
 
-	t := tester.NewTester(cfg, m, true)
+	t := tester.NewTester(cfg, m, false)
 	t.NewRun()
 
 }

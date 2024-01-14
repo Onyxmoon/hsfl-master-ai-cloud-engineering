@@ -9,11 +9,15 @@ type Target struct {
 	URL string
 }
 
+type Phase struct {
+	TargetRps int `json:"targetRps"` // TargetRps requests amount to send per second for this phase./
+	TimeIdx   int `json:"timeIdx"`   // TimeIdx where the RPS should be reached in s starting at 0.
+}
+
 type Configuration struct {
-	Users    int       `json:"users"`    // Users to simulate or workers to run concurrently.
-	Targets  []*Target `json:"targets"`  // Targets to address randomly
-	Time     []int     `json:"time"`     // Timestamps where the RPS should be reached in s starting at 0.
-	Requests []int     `json:"requests"` // Requests amount to send per second.
+	Users   int       `json:"users"`   // Users to simulate or workers to run concurrently.
+	Targets []*Target `json:"targets"` // Targets to address randomly
+	Phases  []*Phase  `json:"phases"`  // Phases which are configured for this test scenario.
 }
 
 func GetConfig(path string) (*Configuration, error) {
@@ -21,6 +25,20 @@ func GetConfig(path string) (*Configuration, error) {
 	viper.SetDefault("users", 10)
 	viper.SetDefault("targets", []*Target{
 		{URL: "https://google.de:443"},
+	})
+	viper.SetDefault("phases", []*Phase{
+		{
+			TargetRps: 0,
+			TimeIdx:   0,
+		},
+		{
+			TargetRps: 500,
+			TimeIdx:   10,
+		},
+		{
+			TargetRps: 500,
+			TimeIdx:   20,
+		},
 	})
 
 	err := viper.ReadInConfig()
@@ -33,8 +51,8 @@ func GetConfig(path string) (*Configuration, error) {
 		return nil, err
 	}
 
-	if len(configuration.Time) != len(configuration.Requests) {
-		return nil, fmt.Errorf("length of 'time' and 'requests' should be equal")
+	if configuration.Phases == nil || len(configuration.Phases) == 0 {
+		panic("No phases specified")
 	}
 
 	return configuration, nil
