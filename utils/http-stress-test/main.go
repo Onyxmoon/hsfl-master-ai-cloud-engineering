@@ -11,7 +11,6 @@ import (
 const configPath = "config.yaml"
 
 func main() {
-	// Cancel context
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -20,12 +19,10 @@ func main() {
 		log.Fatalf("Couldn't load config: %v", err)
 	}
 
-	// Metric display
 	m := metrics.NewMetrics()
 	go m.DisplayMetrics(ctx)
 
-	// Run stress test
-	t := tester.NewTester(cfg, m)
-	t.Run()
+	t := tester.NewTester(cfg, m, false)
+	t.NewRun()
 
 }
