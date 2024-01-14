@@ -14,3 +14,4 @@ fi
 echo "Adding test data to database:"
 curl -u "${RQLITE_USER}":"${RQLITE_PASSWORD}" -s -XPOST "${RQLITE_URL}/db/load" -H "Content-type: text/plain" --data-binary @/scripts/init.sql
 exit 0
+
