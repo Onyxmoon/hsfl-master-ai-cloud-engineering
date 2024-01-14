@@ -22,7 +22,6 @@ func GetConfig(path string) (*Configuration, error) {
 	viper.SetDefault("targets", []*Target{
 		{URL: "https://google.de:443"},
 	})
-	viper.WriteConfigAs("configexample")
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -34,7 +33,6 @@ func GetConfig(path string) (*Configuration, error) {
 		return nil, err
 	}
 
-	// Ensure the length of Time and Requests slices are equal
 	if len(configuration.Time) != len(configuration.Requests) {
 		return nil, fmt.Errorf("length of 'time' and 'requests' should be equal")
 	}

@@ -9,21 +9,21 @@ import (
 	"time"
 )
 
-type NewNewTester struct {
+type Tester struct {
 	config          *config.Configuration
 	metrics         *metrics.Metrics
 	waitForResponse bool
 }
 
-func MakeNewNewTester(config *config.Configuration, metrics *metrics.Metrics, waitForResponse bool) *NewNewTester {
-	return &NewNewTester{
+func NewTester(config *config.Configuration, metrics *metrics.Metrics, waitForResponse bool) *Tester {
+	return &Tester{
 		config:          config,
 		metrics:         metrics,
 		waitForResponse: waitForResponse,
 	}
 }
 
-func (t *NewNewTester) NewRun() {
+func (t *Tester) NewRun() {
 	var wg sync.WaitGroup
 	var startTime time.Time
 	startTime = time.Now()
@@ -50,7 +50,7 @@ func getLastIndexGreaterThan(arr []int, input float64) int {
 	return -1
 }
 
-func CalculateCurrentRPS(startTime time.Time, timePoints []int, requestPoints []int) float64 {
+func calculateCurrentRPS(startTime time.Time, timePoints []int, requestPoints []int) float64 {
 	if timePoints[0] != 0 {
 		timePoints = append([]int{0}, timePoints...)
 		requestPoints = append([]int{0}, requestPoints...)
@@ -74,7 +74,7 @@ func CalculateCurrentRPS(startTime time.Time, timePoints []int, requestPoints []
 	return 0
 }
 
-func (t *NewNewTester) NewRunUser(wg *sync.WaitGroup, metrics *metrics.Metrics, timePoints []int, requestPoints []int, users int, startTime time.Time, waitForResponse bool) {
+func (t *Tester) NewRunUser(wg *sync.WaitGroup, metrics *metrics.Metrics, timePoints []int, requestPoints []int, users int, startTime time.Time, waitForResponse bool) {
 	if t.metrics != nil {
 		metrics.IncrementUserCount()
 		defer metrics.DecrementUserCount()
@@ -93,7 +93,7 @@ func (t *NewNewTester) NewRunUser(wg *sync.WaitGroup, metrics *metrics.Metrics, 
 			break
 		}
 
-		RPS := CalculateCurrentRPS(startTime, timePoints, requestPoints)
+		RPS := calculateCurrentRPS(startTime, timePoints, requestPoints)
 		metrics.SetRPS(RPS)
 
 		targetIndex := rand.Intn(len(t.config.Targets))
