@@ -29,9 +29,20 @@ func main() {
 	containers := defaultOrchestrator.StartContainers(configuration.Image, configuration.Replicas, configuration.Network)
 
 	// Initialize load balancer
+	var algorithm scheduler.NewScheduler
+	switch configuration.Algorithm {
+	case "round_robin":
+		algorithm = scheduler.NewRoundRobin
+	case "least_connections":
+		algorithm = scheduler.NewLeastConnections
+	case "least_response_time":
+		algorithm = scheduler.NewLeastResponseTime
+	default:
+		log.Fatal("unknown load balancing algorithm")
+	}
+
 	loadBalancer := balancer.NewBalancer(
-		defaultOrchestrator.GetContainerEndpoints(containers, configuration.Network),
-		scheduler.NewRoundRobin)
+		defaultOrchestrator.GetContainerEndpoints(containers, configuration.Network), algorithm)
 	loadBalancer.SetHealthCheckFunction(health.DefaultHealthCheck, 5*time.Second)
 
 	// Start web server

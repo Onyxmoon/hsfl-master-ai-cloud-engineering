@@ -1,3 +1,4 @@
 image: onyxmoon/pw-web-service:latest
 network: internal
 replicas: 5
+algorithm: round_robin

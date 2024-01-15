@@ -8,9 +8,10 @@ import (
 )
 
 type Configuration struct {
-	Image    string `yaml:"image"`    // Image which should be run.
-	Replicas int    `yaml:"replicas"` // Replicas number to run and load balance.
-	Network  string `yaml:"network"`  // Network where replicas belong to.
+	Image     string `yaml:"image"`     // Image which should be run.
+	Replicas  int    `yaml:"replicas"`  // Replicas number to run and load balance.
+	Network   string `yaml:"network"`   // Network where replicas belong to.
+	Algorithm string `yaml:"algorithm"` // Algorithm to use for load balancing
 }
 
 const (
@@ -21,6 +22,7 @@ func GetConfig(path string) *Configuration {
 	viper.SetDefault("image", "nginxdemos/hello")
 	viper.SetDefault("replicas", 5)
 	viper.SetDefault("network", "bridge")
+	viper.SetDefault("algorithm", "round_robin")
 
 	if len(path) != 0 {
 		viper.SetConfigFile(path)
