@@ -20,6 +20,22 @@ stringData:
     ]
 ---
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: database-data
+  annotations:
+    author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  hostPath:
+    path: /var/price-whisper/database-data/
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: database-data
@@ -27,6 +43,7 @@ metadata:
   annotations:
     author: Gruppe 6 <philipp.borucki@stud.hs-flensburg.de | dorien.groenwald@stud.hs-flensburg.de | jannick.lindner@stud.hs-flensburg.de>
 spec:
+  volumeName: database-data
   accessModes:
     - ReadWriteOnce
   resources:
