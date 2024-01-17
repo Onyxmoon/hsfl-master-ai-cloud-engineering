@@ -127,7 +127,3 @@ func (m *Metrics) DisplayMetrics(ctx context.Context) {
 		}
 	}
 }
-
-func formatInt64(i int64) string {
-	return fmt.Sprintf("%d", i)
-}

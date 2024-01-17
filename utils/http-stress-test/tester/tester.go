@@ -120,12 +120,13 @@ func (t *Tester) NewRunUser(wg *sync.WaitGroup, metrics *metrics.Metrics, timePo
 			}
 		} else {
 			fastclient := network.NewTcpClient()
-			go fastclient.Send(targetURL)
+			err := fastclient.Send(targetURL)
 			responseTime := time.Since(startTime)
 			requestCount++
 
 			if metrics != nil {
-				metrics.RecordResponse(responseTime, true)
+				success := err == nil
+				metrics.RecordResponse(responseTime, success)
 			}
 		}
 
