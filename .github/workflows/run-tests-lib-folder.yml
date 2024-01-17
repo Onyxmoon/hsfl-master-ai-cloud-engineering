@@ -21,30 +21,6 @@ jobs:
         with:
           go-version: 1.21
 
-      - name: Install dependencies for config
-        working-directory: ./lib/config
-        run: go mod tidy
-
-      - name: Install dependencies for router
-        working-directory: ./lib/router
-        run: go mod tidy
-
-      - name: Install dependencies for rpc
-        working-directory: ./lib/rpc
-        run: go mod tidy
-
-      - name: Build config library
-        working-directory: ./lib/config
-        run: go build -v ./...
-
-      - name: Build router library
-        working-directory: ./lib/router
-        run: go build -v ./...
-
-      - name: Build rpc library
-        working-directory: ./lib/rpc
-        run: go build -v ./...
-
       - name: Test Go config Module
         run: |
           cd lib/config

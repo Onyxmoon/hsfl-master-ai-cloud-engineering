@@ -1,5 +1,5 @@
 # Price Whisper
-![Coverage](https://img.shields.io/badge/Coverage-75.1%25-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-83.2%25-brightgreen)
 ![GitHub release (by tag)](https://img.shields.io/github/v/tag/onyxmoon/hsfl-master-ai-cloud-engineering.svg?sort=semver&label=Version&color=4ccc93d)
 [![Run tests (lib folder)](https://github.com/Onyxmoon/hsfl-master-ai-cloud-engineering/actions/workflows/run-tests-lib-folder.yml/badge.svg)](https://github.com/Onyxmoon/hsfl-master-ai-cloud-engineering/actions/workflows/run-tests-lib-folder.yml)
 [![Run tests (http proxy service)](https://github.com/Onyxmoon/hsfl-master-ai-cloud-engineering/actions/workflows/run-tests-http-proxy-service.yml/badge.svg)](https://github.com/Onyxmoon/hsfl-master-ai-cloud-engineering/actions/workflows/run-tests-http-proxy-service.yml)
@@ -41,7 +41,8 @@ The complete application can be deployed within a kubernetes cluster.
    ```shell
    kubectl apply -R -f ./kubernetes/manifests
    ```
-
+5. The main page can be accessed via the public port of the `HTTP Proxy Service` container.
+Monitoring can be accessed via the Grafana public port. There is an example dashboard configuration file at [kubernetes/grafana](kubernetes/grafana/dashboard-config.json).
 ## Setup project in Docker
 ### Requirements
 - Docker Compose version v2.23.3

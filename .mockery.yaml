@@ -30,3 +30,13 @@ packages:
     interfaces:
       Controller:
       Repository:
+  hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/auth:
+    config:
+      dir: "./src/user-service/auth/_mock"
+    interfaces:
+      TokenGenerator:
+  hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/crypto:
+    config:
+      dir: "./src/user-service/crypto/_mock"
+    interfaces:
+      Hasher:

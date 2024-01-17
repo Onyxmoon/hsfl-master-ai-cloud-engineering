@@ -1,10 +1,14 @@
 phases:
     - targetrps: 0
       timeidx: 0
+    - targetrps: 100
+      timeidx: 15
     - targetrps: 500
-      timeidx: 10
-    - targetrps: 500
-      timeidx: 20
+      timeidx: 30
+    - targetrps: 100
+      timeidx: 50
+    - targetrps: 0
+      timeidx: 70
 targets:
-    - url: https://google.de:443
+    - url: http://onyxmoon.me
 users: 10
