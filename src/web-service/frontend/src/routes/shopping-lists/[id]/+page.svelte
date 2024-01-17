@@ -95,7 +95,7 @@
                     {data.list.description}
                 </h1>
                 <p class="text-gray-dark text-sm mt-1">
-                    Anzahl der Einträge: {data.entries.length}
+                    Anzahl der Einträge: {data.products.length}
                 </p>
             </div>
         </section>

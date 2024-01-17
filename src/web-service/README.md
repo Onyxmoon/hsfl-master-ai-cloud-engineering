@@ -21,3 +21,8 @@ The project's static files are generated using Vite, a fast build tool that enha
 2. Install dependencies: `npm ci`
 3. For developing with hot module replacement use `npm run dev` and open up server provided by vite
 4. For using webserver from golang use `npm run build`, run the `main.go` file and open localhost with port `:8080` or use docker and call localhost.
+
+## Run service
+You can operate the service either as a standalone application or within a containerized environment.
+
+Also: See the main [README.md](/README.md) to get information for a complete containerized setup. 

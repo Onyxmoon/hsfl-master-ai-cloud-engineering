@@ -1,14 +1,14 @@
-name: Run tests (product-service)
+name: Run tests (load balancer service)
 
 on:
   push:
     paths:
-      - 'src/product-service/**'
+      - 'src/load-balancer-service/**'
   workflow_dispatch:
 
 jobs:
   test:
-    name: Test product-service
+    name: Test web-service
     runs-on: ubuntu-latest
 
     steps:
@@ -22,8 +22,8 @@ jobs:
 
       - name: Test Go Module
         run: |
-          cd src/product-service
-          go test ./... --tags=integration
+          cd src/load-balancer-service
+          go test ./...
           test_exit_code=$? # Capture the exit code of the go test command
           if [ $test_exit_code -eq 0 ]; then
             echo "Tests passed successfully."

@@ -1,7 +1,14 @@
-users: 100
-requests: 5000
-duration: 0
-rampUp: 10
-rateLimit: 0
+phases:
+    - targetrps: 0
+      timeidx: 0
+    - targetrps: 100
+      timeidx: 15
+    - targetrps: 500
+      timeidx: 30
+    - targetrps: 100
+      timeidx: 50
+    - targetrps: 0
+      timeidx: 70
 targets:
-  - url: http://localhost:3003/api/v1/product/
+    - url: http://onyxmoon.me
+users: 10

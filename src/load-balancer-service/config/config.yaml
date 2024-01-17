@@ -1,3 +1,4 @@
 image: nginxdemos/hello
 network: bridge
 replicas: 5
+algorithm: round_robin

@@ -13,6 +13,7 @@ type Metrics struct {
 	TotalRequests      int64
 	SuccessfulRequests int64
 	FailedRequests     int64
+	RequestsPerSecond  float64
 	TotalResponseTime  time.Duration
 	MaxResponseTime    time.Duration
 	lock               sync.Mutex
@@ -20,6 +21,12 @@ type Metrics struct {
 
 func NewMetrics() *Metrics {
 	return &Metrics{}
+}
+
+func (m *Metrics) SetRPS(rps float64) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	m.RequestsPerSecond = rps
 }
 
 func (m *Metrics) IncrementUserCount() {
@@ -65,6 +72,21 @@ func (m *Metrics) GetAverageRequestsPerSecond(startTime time.Time) float64 {
 	return float64(m.TotalRequests) / elapsedTime
 }
 
+func (m *Metrics) GetRequestsPerSecond() float64 {
+	if m.RequestsPerSecond == 0 {
+		return 0
+	}
+	return m.RequestsPerSecond
+}
+
+func (m *Metrics) GetElapsedTime(startTime time.Time) float64 {
+	elapsedTime := time.Since(startTime).Seconds()
+	if elapsedTime == 0 {
+		return 0
+	}
+	return float64(elapsedTime)
+}
+
 func (m *Metrics) DisplayMetrics(ctx context.Context) {
 	startTime := time.Now()
 
@@ -84,6 +106,8 @@ func (m *Metrics) DisplayMetrics(ctx context.Context) {
 			{"Average Response Time", m.GetAverageResponseTime().String()},
 			{"Max Response Time", m.MaxResponseTime.String()},
 			{"Avg Requests/Sec", fmt.Sprintf("%.2f", m.GetAverageRequestsPerSecond(startTime))},
+			{"Target Req/Sec: ", fmt.Sprintf("%.2f", m.GetRequestsPerSecond())},
+			{"Elapsed Time: ", fmt.Sprintf("%.2f", m.GetElapsedTime(startTime))},
 		}
 	}
 
@@ -102,8 +126,4 @@ func (m *Metrics) DisplayMetrics(ctx context.Context) {
 			return
 		}
 	}
-}
-
-func formatInt64(i int64) string {
-	return fmt.Sprintf("%d", i)
 }
