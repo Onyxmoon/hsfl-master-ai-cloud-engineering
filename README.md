@@ -8,6 +8,8 @@
 [![Run tests (user-service)](https://github.com/Onyxmoon/hsfl-master-ai-cloud-engineering/actions/workflows/run-tests-user-service.yml/badge.svg)](https://github.com/Onyxmoon/hsfl-master-ai-cloud-engineering/actions/workflows/run-tests-user-service.yml)
 [![Run tests (web service)](https://github.com/Onyxmoon/hsfl-master-ai-cloud-engineering/actions/workflows/run-tests-web-service.yml/badge.svg)](https://github.com/Onyxmoon/hsfl-master-ai-cloud-engineering/actions/workflows/run-tests-web-service.yml)
 
+![Hero Image](README.assets/frontend_shopping_list.png)
+
 PriceWhisper is your go-to destination for effortless savings on every shopping trip. Compare prices across supermarkets, find the best deals, and save money without the noise. Unlock the power of smart shopping with PriceWhisper.
 
 PriceWhisper is an web application designed to streamline shopping experiences. Users can input their shopping list containing various products, and PriceWhisper meticulously scans multiple retailers, extracting pricing data given merchants.
@@ -21,9 +23,16 @@ Key features:
 - **Efficiency:** The platform streamlines the shopping experience, improving efficiency and reducing the effort required to find savings.
 - **Data Aggregation:** The database aggregate pricing data from various merchants for one product.
 
-## Prototypical architecture
+## Current architecture
 
 ![Architecture](README.assets/CE_Architecture_Prototype.svg)
+
+## Technologies
+The following technologies and tools must be installed for native development
+- Go 1.21
+- protobuf
+- protoc-gen-go
+- protoc-gen-go-grpc
 
 ## Setup project in Kubernetes
 The complete application can be deployed within a kubernetes cluster. 
@@ -43,10 +52,20 @@ The complete application can be deployed within a kubernetes cluster.
    ```
 5. The main page can be accessed via the public port of the `HTTP Proxy Service` container.
 Monitoring can be accessed via the Grafana public port. There is an example dashboard configuration file at [kubernetes/grafana](kubernetes/grafana/dashboard-config.json).
+
+You can use the following commands to find the current ports for each service:
+```shell
+kubectl get services -n price-whisper
+```
+```shell
+kubectl get services -n monitoring
+```
 ## Setup project in Docker
 ### Requirements
 - Docker Compose version v2.23.3
 - a compatible container daemon
+
+> The Compose version is required because a relative new feature for inline configs is used.
 
 ### Development setup via docker-compose
 > The development setup exposes all ports to the host machine, so you can access each service individually. Docker will build locally and the database is not persistent in this setup.
@@ -68,6 +87,9 @@ Monitoring can be accessed via the Grafana public port. There is an example dash
    > When step is missing, container will use a random but secure generated key on each start.
 5. Run `docker compose -f docker-compose.dev.yml up -d` to start the containers defined in the Compose file
 6. Run `docker compopse down` to stop container, networks, volumes, and images created by up.
+
+> The main application entrypoint is now available at `http://localhost:8080`
+
 ### Normal setup via docker-compose
 > The normal setup isolates the internal communication between services and only the proxy is reachable from the host machine. Prebuild images from Docker Hub will be used and database is persistent in this setup.
 1. Use the docker-compose.yml from the root of this repository.
@@ -84,6 +106,16 @@ Monitoring can be accessed via the Grafana public port. There is an example dash
    > When step is missing, container will use a random but secure generated key on each start.
 4. Run `docker compose -f docker-compose.yml up -d` to start the containers defined in the Compose file
 5. Run `docker compose down` to stop container, networks, volumes, and images created by up.
+
+> The main application entrypoint is now available at `http://localhost:80`
+
+### Test dataset
+The test data set comprises a variety of sample products with pricing information. It also includes lists and profiles of users designed for testing purposes. 
+Access data for a typical test user is outlined as follows:
+
+| Email            | Password |
+|------------------|----------|
+| test@example.com | test     |
 
 ## Testing
 To run all tests, you can use the following command in the root directory:
