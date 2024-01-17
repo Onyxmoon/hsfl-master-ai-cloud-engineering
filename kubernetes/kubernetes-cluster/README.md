@@ -14,11 +14,8 @@ This README guides you through the process of setting up a Kubernetes cluster wi
     ```
 6. Run `ansible-playbook setup.yaml` to setup cluster
 
-> The first time the manifests are automatically deployed after commissioning, the distribution of the pods may not be uniform.
+> When the manifests are automatically distributed for the first time after commissioning, the distribution of the pods across the nodes may not be evenly.
 
 ## Additional Notes
 Ensure that Ansible is properly installed and configured on your system.
 Verify that the SSH key has the correct permissions and is recognized by your system.
-If you encounter any issues, consult the official Kubernetes and Ansible documentation for troubleshooting steps.
-Conclusion
-Following these steps should successfully set up a Kubernetes cluster using Ansible. For more detailed instructions or advanced configurations, refer to the Kubernetes and Ansible official documentation.
