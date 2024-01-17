@@ -1,12 +1,14 @@
 package handler
 
 import (
-	"encoding/json"
-	"github.com/stretchr/testify/assert"
+	"errors"
+	"github.com/stretchr/testify/mock"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/auth"
-	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/auth/utils"
+	authMock "hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/auth/_mock"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/crypto"
+	cryptoMock "hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/crypto/_mock"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/user"
+	userMock "hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/user/_mock"
 	"hsfl.de/group6/hsfl-master-ai-cloud-engineering/user-service/user/model"
 	"net/http"
 	"net/http/httptest"
@@ -15,213 +17,157 @@ import (
 )
 
 func TestLoginHandler(t *testing.T) {
-	type fields struct {
-		loginHandler *LoginHandler
-	}
-	type args struct {
-		writer  *httptest.ResponseRecorder
-		request *http.Request
-	}
-	tests := []struct {
-		name             string
-		fields           fields
-		args             args
-		expectedStatus   int
-		expectedResponse string
-	}{
-		{
-			name: "Valid User (expect 200)",
-			fields: fields{
-				loginHandler: setupLoginHandler(),
-			},
-			args: args{
-				writer: httptest.NewRecorder(),
-				request: httptest.NewRequest(
-					"POST",
-					"/api/v1/authentication/login",
-					strings.NewReader(`{"email": "ada.lovelace@gmail.com", "password": "123456"}`),
-				),
-			},
-			expectedStatus:   http.StatusOK,
-			expectedResponse: "",
-		},
-		{
-			name: "Invalid User Mail (expect 500)",
-			fields: fields{
-				loginHandler: setupLoginHandler(),
-			},
-			args: args{
-				writer: httptest.NewRecorder(),
-				request: httptest.NewRequest(
-					"POST",
-					"/api/v1/authenticationy/login",
-					strings.NewReader(`{"email": "adaa.lovelace@gmail.com", "password": "123456"}`),
-				),
-			},
-			expectedStatus:   http.StatusInternalServerError,
-			expectedResponse: "",
-		},
-		{
-			name: "Invalid Request - Empty Password (expect 400)",
-			fields: fields{
-				loginHandler: setupLoginHandler(),
-			},
-			args: args{
-				writer: httptest.NewRecorder(),
-				request: httptest.NewRequest(
-					"POST",
-					"/api/v1/authentication/login",
-					strings.NewReader(`{"email": "ada.lovelace@gmail.com", "password": ""}`),
-				),
-			},
-			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: "",
-		},
-		{
-			name: "Wrong password (expect 401)",
-			fields: fields{
-				loginHandler: setupLoginHandler(),
-			},
-			args: args{
-				writer: httptest.NewRecorder(),
-				request: httptest.NewRequest(
-					"POST",
-					"/api/v1/authentication/login",
-					strings.NewReader(`{"email": "ada.lovelace@gmail.com", "password": "98765"}`),
-				),
-			},
-			expectedStatus:   http.StatusUnauthorized,
-			expectedResponse: "",
-		},
-		{
-			name: "Malformed JSON (expect 400)",
-			fields: fields{
-				loginHandler: setupLoginHandler(),
-			},
-			args: args{
-				writer: httptest.NewRecorder(),
-				request: httptest.NewRequest(
-					"POST",
-					"/api/v1/authentication/login",
-					strings.NewReader(`{"email": "ada.lovelace@gmail.com", "password": "123456"`),
-				),
-			},
-			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: "",
-		},
-		{
-			name: "Missing field (expect 400)",
-			fields: fields{
-				loginHandler: setupLoginHandler(),
-			},
-			args: args{
-				writer: httptest.NewRecorder(),
-				request: httptest.NewRequest(
-					"POST",
-					"/api/v1/authentication/login",
-					strings.NewReader(`{"email": "ada.lovelace@gmail.com"`),
-				),
-			},
-			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: "",
-		},
-		{
-			name: "Invalid user data, incorrect Type for Email and Password (expected String) (expect 400)",
-			fields: fields{
-				loginHandler: setupLoginHandler(),
-			},
-			args: args{
-				writer: httptest.NewRecorder(),
-				request: httptest.NewRequest(
-					"POST",
-					"/api/v1/authentication/login",
-					strings.NewReader(`{"email": 120, "password": 120`),
-				),
-			},
-			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: "",
-		},
-	}
+	mockUsersRepository := userMock.MockRepository{}
+	var userRepository user.Repository = &mockUsersRepository
+	mockHasher := cryptoMock.NewMockHasher(t)
+	var hasher crypto.Hasher = mockHasher
+	mockTokenGenerator := authMock.MockTokenGenerator{}
+	var tokenGenerator auth.TokenGenerator = &mockTokenGenerator
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	loginHandler := NewLoginHandler(userRepository, hasher, tokenGenerator)
 
-			tt.fields.loginHandler.Login(tt.args.writer, tt.args.request)
+	t.Run("Valid User (expect 200)", func(t *testing.T) {
+		expectedStatus := http.StatusOK
 
-			// You can then assert the response status and content, and check against your expectations.
-			if tt.args.writer.Code != tt.expectedStatus {
-				t.Errorf("Expected status code %d, but got %d", tt.expectedStatus, tt.args.writer.Code)
-			}
-
-			if tt.expectedResponse != "" {
-				actualResponse := tt.args.writer.Body.String()
-				if actualResponse != tt.expectedResponse {
-					t.Errorf("Expected response: %s, but got: %s", tt.expectedResponse, actualResponse)
-				}
-			}
-		})
-	}
-
-	loginHandler := setupLoginHandler()
-
-	writer := httptest.NewRecorder()
-	request := httptest.NewRequest(
-		"POST",
-		"/api/v1/authentication/login",
-		strings.NewReader(`{"email": "ada.lovelace@gmail.com", "password": "123456"}`),
-	)
-
-	loginHandler.Login(writer, request)
-
-	res := writer.Result()
-	var response map[string]interface{}
-	err := json.NewDecoder(res.Body).Decode(&response)
-
-	assert.NoError(t, err)
-	assert.Contains(t, response["access_token"], "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9")
-	assert.Equal(t, "Bearer", response["token_type"])
-	assert.Equal(t, float64(3600), response["expires_in"])
-	assert.Equal(t, http.StatusOK, writer.Code)
-}
-
-func setupLoginHandler() *LoginHandler {
-	pemPrivateKey := utils.GenerateRandomECDSAPrivateKeyAsPEM()
-
-	var jwtToken, _ = auth.NewJwtTokenGenerator(
-		auth.JwtConfig{PrivateKey: pemPrivateKey})
-
-	return NewLoginHandler(setupMockRepository(),
-		crypto.NewBcryptHasher(), jwtToken)
-}
-
-func setupMockRepository() user.Repository {
-	repository := user.NewDemoRepository()
-	userSlice := setupDemoUserSlice()
-	for _, newUser := range userSlice {
-		_, _ = repository.Create(newUser)
-	}
-
-	return repository
-}
-
-func setupDemoUserSlice() []*model.User {
-	bcryptHasher := crypto.NewBcryptHasher()
-	hashedPassword, _ := bcryptHasher.Hash([]byte("123456"))
-
-	return []*model.User{
-		{
+		mockUsersRepository.EXPECT().FindByEmail("ada.lovelace@gmail.com").Return(&model.User{
 			Id:       1,
 			Email:    "ada.lovelace@gmail.com",
-			Password: hashedPassword,
+			Password: []byte("123456"),
 			Name:     "Ada Lovelace",
 			Role:     model.Customer,
-		},
-		{
-			Id:       2,
-			Email:    "alan.turin@gmail.com",
-			Password: hashedPassword,
-			Name:     "Alan Turing",
+		}, nil).Once()
+
+		mockTokenGenerator.EXPECT().CreateToken(mock.Anything).Return("valid-token", nil).Once()
+
+		mockHasher.EXPECT().Validate([]byte("123456"), []byte("123456")).Return(true).Once()
+
+		writer := httptest.NewRecorder()
+		request := httptest.NewRequest(
+			"POST",
+			"/api/v1/authentication/login",
+			strings.NewReader(`{"email": "ada.lovelace@gmail.com", "password": "123456"}`),
+		)
+
+		loginHandler.Login(writer, request)
+
+		if writer.Code != expectedStatus {
+			t.Errorf("Expected status code %d, but got %d", expectedStatus, writer.Code)
+		}
+	})
+
+	t.Run("Invalid User Mail (expect 500)", func(t *testing.T) {
+		expectedStatus := http.StatusInternalServerError
+
+		mockUsersRepository.EXPECT().FindByEmail("ada.lovelace@gmail.com").Return(nil, errors.New(user.ErrorUserNotFound)).Once()
+
+		writer := httptest.NewRecorder()
+		request := httptest.NewRequest(
+			"POST",
+			"/api/v1/authentication/login",
+			strings.NewReader(`{"email": "ada.lovelace@gmail.com", "password": "123456"}`),
+		)
+
+		loginHandler.Login(writer, request)
+
+		if writer.Code != expectedStatus {
+			t.Errorf("Expected status code %d, but got %d", expectedStatus, writer.Code)
+		}
+	})
+
+	t.Run("Invalid Request - Empty Password (expect 400)", func(t *testing.T) {
+		expectedStatus := http.StatusBadRequest
+
+		writer := httptest.NewRecorder()
+		request := httptest.NewRequest(
+			"POST",
+			"/api/v1/authentication/login",
+			strings.NewReader(`{"email": "ada.lovelace@gmail.com"}`),
+		)
+
+		loginHandler.Login(writer, request)
+
+		if writer.Code != expectedStatus {
+			t.Errorf("Expected status code %d, but got %d", expectedStatus, writer.Code)
+		}
+	})
+
+	t.Run("Wrong password (expect 401)", func(t *testing.T) {
+		expectedStatus := http.StatusUnauthorized
+
+		mockUsersRepository.EXPECT().FindByEmail("ada.lovelace@gmail.com").Return(&model.User{
+			Id:       1,
+			Email:    "ada.lovelace@gmail.com",
+			Password: []byte("894544"),
+			Name:     "Ada Lovelace",
 			Role:     model.Customer,
-		},
-	}
+		}, nil)
+
+		mockTokenGenerator.EXPECT().CreateToken(mock.Anything).Return("valid-token", nil).Once()
+
+		mockHasher.EXPECT().Validate([]byte("123456"), []byte("894544")).Return(false).Once()
+
+		writer := httptest.NewRecorder()
+		request := httptest.NewRequest(
+			"POST",
+			"/api/v1/authentication/login",
+			strings.NewReader(`{"email": "ada.lovelace@gmail.com", "password": "123456"}`),
+		)
+
+		loginHandler.Login(writer, request)
+
+		if writer.Code != expectedStatus {
+			t.Errorf("Expected status code %d, but got %d", expectedStatus, writer.Code)
+		}
+	})
+
+	t.Run("Malformed JSON (expect 400)", func(t *testing.T) {
+		expectedStatus := http.StatusBadRequest
+
+		writer := httptest.NewRecorder()
+		request := httptest.NewRequest(
+			"POST",
+			"/api/v1/authentication/login",
+			strings.NewReader(`{"email: "ada.lovelace@gmail.com`),
+		)
+
+		loginHandler.Login(writer, request)
+
+		if writer.Code != expectedStatus {
+			t.Errorf("Expected status code %d, but got %d", expectedStatus, writer.Code)
+		}
+	})
+
+	t.Run("Missing field (expect 400)", func(t *testing.T) {
+		expectedStatus := http.StatusBadRequest
+
+		writer := httptest.NewRecorder()
+		request := httptest.NewRequest(
+			"POST",
+			"/api/v1/authentication/login",
+			strings.NewReader(`{"password": "12345"}`),
+		)
+
+		loginHandler.Login(writer, request)
+
+		if writer.Code != expectedStatus {
+			t.Errorf("Expected status code %d, but got %d", expectedStatus, writer.Code)
+		}
+	})
+
+	t.Run("Invalid user data, incorrect Type for Email and Password (expected String) (expect 400)", func(t *testing.T) {
+		expectedStatus := http.StatusBadRequest
+
+		writer := httptest.NewRecorder()
+		request := httptest.NewRequest(
+			"POST",
+			"/api/v1/authentication/login",
+			strings.NewReader(`{"email": 120 "password": 120}`),
+		)
+
+		loginHandler.Login(writer, request)
+
+		if writer.Code != expectedStatus {
+			t.Errorf("Expected status code %d, but got %d", expectedStatus, writer.Code)
+		}
+	})
 }

@@ -41,7 +41,8 @@ The complete application can be deployed within a kubernetes cluster.
    ```shell
    kubectl apply -R -f ./kubernetes/manifests
    ```
-
+5. The main page can be accessed via the public port of the `HTTP Proxy Service` container.
+Monitoring can be accessed via the Grafana public port. There is an example dashboard configuration file at [kubernetes/grafana](kubernetes/grafana/dashboard-config.json).
 ## Setup project in Docker
 ### Requirements
 - Docker Compose version v2.23.3
