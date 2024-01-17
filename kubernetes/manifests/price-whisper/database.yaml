@@ -9,8 +9,8 @@ stringData:
   config.json: |
     [
       {
-        "username": "username",
-        "password": "changeMe!",
+        "username": "db-username",
+        "password": "db-pw-changeMe!",
         "perms": [ "all" ]
       },
       {
